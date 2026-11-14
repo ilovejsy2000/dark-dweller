@@ -1,4 +1,4 @@
-/* 다크 드웰러 오프라인 저장. 만든 때 202611141138 */
+/* 다크 드웰러 오프라인 저장. 만든 때 202611141143 */
 const CACHE='dd-cache',FILES=["./","index.html","js/base.js","js/data.js","js/extra.js","js/game.js","js/gear.js","js/help.js","js/main.js","js/mobs.js","js/relics.js","js/render.js","js/skills2.js","js/ui.js","js/world.js","img/hero.png","img/gear.png","img/mobs.png","img/mobs2.png","img/bosses.png","img/skills.png"];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>Promise.all(FILES.map(f=>fetch(f,{cache:'no-cache'}).then(r=>r.ok&&c.put(f,r)).catch(()=>{})))));});
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));

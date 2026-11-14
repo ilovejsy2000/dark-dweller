@@ -20,7 +20,21 @@ const keys={};let joy=null;
 window.addEventListener('keydown',e=>{keys[e.code]=true;if(/^Arrow|Space/.test(e.code))e.preventDefault();if(e.code==='Escape'){if(paused&&!$('pause').hidden)uiResume();else uiPause();}});
 window.addEventListener('keyup',e=>{keys[e.code]=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;joy=null;});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)uiPause();});
+/* 화면이 가려지면(홈·뒤로 가기·다른 앱) 게임을 멈추고 소리도 끈다. 다시 보이면 소리만 되살린다(게임은 멈춤 화면에서 직접 계속) */
+function ddHide(){uiPause();for(const k in keys)keys[k]=false;joy=null;try{if(AC&&AC.state==='running')AC.suspend();}catch(_){}}
+function ddShow(){try{if(AC&&AC.state==='suspended')AC.resume();}catch(_){}}
+document.addEventListener('visibilitychange',()=>{document.hidden?ddHide():ddShow();});
+window.addEventListener('pagehide',ddHide);
+/* 앱의 뒤로 가기 단추: 열린 창을 닫거나 게임을 멈춘다. 닫을 것이 없으면 false 를 돌려주고, 그러면 앱이 뒤로 물러난다 */
+function ddBack(){
+  if(!$('help').hidden){show('help',false);return true;}
+  if(!$('tip').hidden){show('tip',false);return true;}
+  if(!$('cfg').hidden){closeCfg();return true;}
+  if(!$('inv').hidden){closeInv();return true;}
+  if(state==='play'&&!paused&&!choosing&&!ending){uiPause();return true;}
+  return false;
+}
+window.__ddHide=ddHide;window.__ddShow=ddShow;window.__ddBack=ddBack;
 cv.addEventListener('pointerdown',e=>{if(state!=='play'||paused||choosing)return;soundOn();const r=cv.getBoundingClientRect();joy={id:e.pointerId,x0:e.clientX-r.left,y0:e.clientY-r.top,x:e.clientX-r.left,y:e.clientY-r.top};try{cv.setPointerCapture(e.pointerId);}catch(_){}});
 cv.addEventListener('pointermove',e=>{if(joy&&e.pointerId===joy.id){const r=cv.getBoundingClientRect();joy.x=e.clientX-r.left;joy.y=e.clientY-r.top;}});
 const joyEnd=e=>{if(joy&&e.pointerId===joy.id)joy=null;};cv.addEventListener('pointerup',joyEnd);cv.addEventListener('pointercancel',joyEnd);
