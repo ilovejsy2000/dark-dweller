@@ -9,7 +9,7 @@ let ELM={},SETN={},streak=0,streakT=0,soulStack=0,killCount=0,aegisT=0,raT=4,rev
 /* 계열 피해: cut 물리, fire 화염, zap 번개, ice 냉기, vine 독, thud 암흑, all 전부 */
 const FXEL={forge:{fire:.25},stormEl:{zap:.25},frostEl:{ice:.25},darkEl:{thud:.25,vine:.25},venomEl:{vine:.4},zeus:{zap:.6},surtr:{fire:.6},poseidon:{ice:.6},erebus:{thud:.6,vine:.6},
   excalibur:{cut:.5},gungnir:{ice:.4,cut:.2},mjolnir:{zap:.3},allDmg:{all:.1}};
-function relicReset(){streak=0;streakT=0;soulStack=0;killCount=0;aegisT=0;raT=4;reviveUsed=false;slashN=0;P.valkT=0;}
+function relicReset(){wuxReset();streak=0;streakT=0;soulStack=0;killCount=0;aegisT=0;raT=4;reviveUsed=false;slashN=0;P.valkT=0;}
 const setHas=(k,n)=>(SETN[k]||0)>=n;
 /* 능력치를 다시 셀 때: 세트 조각 수, 계열 피해, 고유 효과가 바꾸는 능력치 */
 function relicRecalc(s,fx){
@@ -25,6 +25,7 @@ function relicRecalc(s,fx){
   if(setHas('poseidon',2))el({ice:.25},1);if(setHas('poseidon',3))add('chillDmg',1);if(setHas('poseidon',4))fx.iceBurst+=1;
   if(fx.gungnir)add('spearTwin',2*fx.gungnir);if(fx.mjolnir)add('axePlus',2*fx.mjolnir);
   if(fx.keenEye)s.crit+=8*fx.keenEye;if(fx.swift)s.move+=15*fx.swift;if(fx.dodge2)s.move+=15*fx.dodge2;if(fx.atlas)s.move-=10*fx.atlas;
+  wuxRecalc(s,fx);
   if(fx.regenPlus)s.regen+=1.5*fx.regenPlus;if(fx.chronos)s.cdr+=25*fx.chronos;
   const hpMul=1+.15*((fx.titan||0)+(fx.titan2||0))+.3*(fx.gaia||0);s.hp=Math.round(s.hp*hpMul);if(fx.gaia)s.regen=s.regen*2+1;
 }
@@ -38,17 +39,17 @@ function relicDmg(e,kind,heavy){
   if(streak&&(FX.rampage||FX.nike))m*=1+Math.min(.5*(FX.rampage||0)+(FX.nike||0),streak*(.01*(FX.rampage||0)+.02*(FX.nike||0)));
   if(soulStack)m*=1+soulStack;
   if(FX.titan||FX.titan2)m*=1+(.1*(FX.titan||0)+.15*(FX.titan2||0))*P.maxhp/250;
-  return m;
+  return m*wuxDmg(e);
 }
 const procDmg=b=>b*(1+P.level*.08);
 function relicOnHit(e,kind){
-  if(e.dead)return;
+  if(e.dead)return;wuxHit(e);
   if(FX.zproc&&kind==='zap'&&Math.random()<FX.zproc&&can('zp',300)){const x=e.x,y=e.y;later(.08,()=>strikeAt(x,y,60*AREA,procDmg(40),false));}
   if(FX.rune&&Math.random()<.06*FX.rune&&can('rn',300)){const x=e.x,y=e.y;later(.08,()=>strikeAt(x,y,56*AREA,procDmg(34),false));}
   if(FX.medusa&&!e.boss&&Math.random()<.03*FX.medusa){e.stun=Math.max(e.stun,1.5);reactFx(e,'석화','#c9d1e0');}
 }
 function relicOnKill(e){
-  killCount++;streak++;streakT=3;
+  wuxKill(e);killCount++;streak++;streakT=3;
   if(FX.hades)soulStack=Math.min(FX.hades,soulStack+.005*FX.hades);
   const heal=.003*(FX.souls||0)+.006*(FX.anubis||0);if(heal&&!P.dead)P.hp=Math.min(P.maxhp,P.hp+P.maxhp*heal);
   if(FX.valk)P.valkT=3;
@@ -60,6 +61,7 @@ function relicOnKill(e){
 }
 /* true 면 이번 피해를 막는다: 회피·되돌림·보호막 */
 function relicBlock(){
+  if(wuxBlock())return true;
   const dodge=Math.min(.6,.15*(FX.dodge||0)+.25*(FX.dodge2||0)+.25*(FX.rewind||0));
   if(dodge&&Math.random()<dodge){textFx(P.x,P.y-66,FX.rewind?'되돌림':'회피');P.inv=.3;return true;}
   if(FX.aegis&&aegisT<=0){aegisT=12/FX.aegis;textFx(P.x,P.y-66,'보호막','#ffe08a');P.inv=.5;ring(P.x,P.y-20,20,520,'#ffe08a');flash(P.x,P.y-20,260,.25);SFX.wave();
@@ -67,7 +69,7 @@ function relicBlock(){
     return true;}
   return false;
 }
-const relicTaken=()=>Math.max(.4,1-.1*(FX.guard||0)-.2*(FX.atlas||0));
+const relicTaken=()=>Math.max(.4,1-.1*(FX.guard||0)-.2*(FX.atlas||0))*wuxTaken();
 function relicOnHurt(){
   if(!FX.stormArmor)return;const near=enemies.filter(e=>!e.dead&&Math.hypot(e.x-P.x,e.y-P.y)<260);
   for(let i=0;i<4*FX.stormArmor&&near.length;i++){const t=pick(near),x=t.x,y=t.y;later(i*.06,()=>strikeAt(x,y,56*AREA,procDmg(36),false));}
@@ -85,6 +87,7 @@ function sunBeam(){
   SFX.wave();return true;
 }
 function relicTick(dt){
+  wuxTick(dt);
   if(streakT>0){streakT-=dt;if(streakT<=0)streak=0;}
   if(P.valkT>0)P.valkT-=dt;if(aegisT>0)aegisT-=dt;
   if(FX.ra||FX.ra2){raT-=dt;if(raT<=0)raT=sunBeam()?(FX.ra2?6:9):.5;}
@@ -96,6 +99,7 @@ function relicOnSlash(a,dmg){
 }
 /* 보호막이 준비됐을 때 주인공 둘레에 금빛 고리 */
 function renderRelic(){
+  wuxFx();
   if(state!=='play'||P.dead||!FX.aegis||aegisT>0)return;
   ctx.lineWidth=5;ctx.strokeStyle=INK;ctx.beginPath();ctx.ellipse(P.x,P.y-22,26,30,0,0,TAU);ctx.stroke();ctx.lineWidth=2.2;ctx.strokeStyle=`rgba(255,224,138,${.6+.3*Math.sin(clock*5)})`;ctx.stroke();
 }

@@ -144,7 +144,7 @@ const MINI_HORDE=40,HORDE_FROM=90,HORDE_EVERY=180,HORDE_LEN=12,BURN_FROM=180,BUR
 const DIFF={
   spawn:m=>Math.min(32,2.4+m*2.4),            // 초당 등장 수
   cap:m=>Math.min(440,190+m*26),              // 동시에 있는 적의 한도
-  hp:m=>(.75+.75*m)*Math.pow(1.08,m),         // 적 체력 배율 (시작 0.75배, 5분 6.6배, 10분 17배, 20분 75배) — 초반만 살짝 약하게. 기본 체력 자체를 3배쯤 올려 처음부터 여러 번 때려야 죽는다
+  hp:m=>(.75+.75*m)*Math.pow(1.105,m), // 11-15 대표님 "시간에 따라 체력을 더 탄력적으로": 1.08 → 1.105 (10분 22배, 20분 116배, 30분 460배)         // 적 체력 배율 (시작 0.75배, 5분 6.6배, 10분 17배, 20분 75배) — 초반만 살짝 약하게. 기본 체력 자체를 3배쯤 올려 처음부터 여러 번 때려야 죽는다
   dmg:m=>1+.42*m,                              // 적 공격 배율
   spd:m=>1+Math.min(.45,m*.025),              // 적 이동 속도 배율
   xp:m=>1+.15*m+.035*m*m,                     // 경험치 배율(늦게 갈수록 크게: 10분 5배, 20분 18배, 30분 37배)
@@ -153,6 +153,10 @@ const DIFF={
      적마다 등장 비용(cost: 단단한 적일수록 큼)을 치르므로 늦게 나오는 큰 적은 적게, 작은 적은 떼로 나온다 */
   pace:t=>(1+Math.min(.5,t/60*.05))*(1+.3*Math.sin(t*TAU/80)),
 };
+/* 11-15 대표님 "약한 딜 스킬은 쿨타임 짧게, 한 방 한 방이 큰 스킬은 길게": 쿨타임 배수(같은 배수만큼 한 방 피해도 커져서 초당 피해는 비슷) */
+const SKILL_HV={spear:1.1,dark:1.1,zap:1.3,vine:1.3,cloud:1.3,strike:1.4,plasma:1.4,wave:1.5,blizz:1.5,storm:1.5,tring:1.5,frost:1.5,miasma:1.5,meteor:1.6,shower:1.6,smite:1.6,sun:1.8,zero:1.8};
+/* 범위 한계 체감: 1.3배는 1.25배, 1.6배는 1.42배, 아무리 커져도 1.8배를 못 넘는다(11-15 대표님 "범위·크기는 어느 정도 커지면 잘 안 커지게") */
+const softArea=x=>x<=1?x:1+.8*(1-Math.exp(-(x-1)/.8));
 /* 조합 스킬: 재료 두 스킬이 모두 이 단계가 되면 선택지에 나온다 */
 const FUSE_LV=5,FUSE_PLV=1,FUSE_MAX=99,SKILL_MAX=10; // 재료 단계, 주인공 레벨, 한 판의 조합 수, 스킬 최고 단계. 11-14 대표님 "조건 풀어": 레벨 조건·개수 제한 없이 재료 둘이 5단계면 조합
 /* 맵: 맵마다 기본 난이도가 다르고, 어느 맵에서든 시간이 흐르면 위 DIFF 만큼 더 강해진다.
@@ -161,11 +165,11 @@ const FUSE_LV=5,FUSE_PLV=1,FUSE_MAX=99,SKILL_MAX=10; // 재료 단계, 주인공
 const MAPS=[
   {k:'모닥불 숲',star:1,clear:600,d:'처음 가는 곳입니다. 적이 순한 편입니다. 축복 제단 위에 잠깐 서 있으면 40초 동안 강해집니다.',hp:1,dmg:1,spawn:1,champ:0,loot:0,floor:0,dark:[8,10,30,.34],light:300,
     pal:{base:'#3e3a54',mossA:'#2c587e',mossB:'#316189',tuft:'#5490c0',speck:'rgba(120,180,220,.22)',cobble:'rgba(125,115,160,.085)',cov:.53},w:{}},
-  {k:'서리 폐허',star:2,clear:900,d:'마법을 쓰는 적이 많습니다. 얼음 수정에 닿으면 둘레의 적이 얼어붙고, 이따금 눈보라가 붑니다.',hp:1.7,dmg:1.35,spawn:1.05,champ:.03,loot:.6,floor:.1,dark:[10,18,40,.34],light:300,
+  {k:'서리 폐허',star:2,clear:900,d:'마법을 쓰는 적이 많습니다. 얼음 수정에 닿으면 둘레의 적이 얼어붙고, 이따금 눈보라가 붑니다.',hp:2.4,dmg:1.5,spawn:1.05,champ:.03,loot:.6,floor:.1,dark:[10,18,40,.34],light:300,
     pal:{base:'#48506e',mossA:'#b9cfe6',mossB:'#a6c0dc',tuft:'#e6f2ff',speck:'rgba(255,255,255,.5)',cobble:'rgba(200,215,240,.07)',cov:.5},w:{wisp:9,shaman:7,moss:6,wraith:6,sorcerer:3,beetle:5}},
-  {k:'잿불 황야',star:3,clear:1200,d:'터지는 적과 돌진하는 적이 몰려옵니다. 화약통에 닿으면 크게 터지고, 하늘에서 화산탄이 떨어집니다.',hp:2.8,dmg:1.8,spawn:1.2,champ:.06,loot:1.3,floor:.2,dark:[26,8,10,.36],light:300,
+  {k:'잿불 황야',star:3,clear:1200,d:'터지는 적과 돌진하는 적이 몰려옵니다. 화약통에 닿으면 크게 터지고, 하늘에서 화산탄이 떨어집니다.',hp:5,dmg:2.1,spawn:1.2,champ:.06,loot:1.3,floor:.2,dark:[26,8,10,.36],light:300,
     pal:{base:'#47353a',mossA:'#8f2f1c',mossB:'#a63a1e',tuft:'#ff9a3c',speck:'rgba(255,200,120,.5)',cobble:'rgba(190,120,100,.08)',cov:.6},w:{puff:8,rat:9,moss:7,imp:8,wolf:7,orc:5}},
-  {k:'심연',star:4,clear:1800,d:'빛이 좁고 모든 적이 강합니다. 영혼 등불을 켜면 그 빛 안에서 강해집니다. 가장 좋은 장비가 나옵니다.',hp:4.5,dmg:2.4,spawn:1.3,champ:.1,loot:2.2,floor:.3,dark:[6,2,16,.55],light:230,
+  {k:'심연',star:4,clear:1800,d:'빛이 좁고 모든 적이 강합니다. 영혼 등불을 켜면 그 빛 안에서 강해집니다. 가장 좋은 장비가 나옵니다.',hp:9,dmg:2.9,spawn:1.3,champ:.1,loot:2.2,floor:.3,dark:[6,2,16,.55],light:230,
     pal:{base:'#2b2741',mossA:'#3b2463',mossB:'#452d77',tuft:'#7a4fd0',speck:'rgba(190,150,255,.4)',cobble:'rgba(120,90,170,.07)',cov:.5},w:{wraith:6,sorcerer:3,spider:6,bat:7}},
 ];
 const mapIdx=()=>MAP.base!==undefined?MAP.base:MAPS.indexOf(MAP); // 영겁의 굴레는 맵 사본을 쓰므로 원래 맵 번호(base)
@@ -177,7 +181,7 @@ const SPAWNS=[{type:'moss',from:0,to:4,w:10},{type:'rat',from:.3,to:5,w:6},{type
 const spawnFade=(s,m)=>m<s.from?0:Math.min(1,(m-s.from)+.3)*(s.to!==undefined&&m>s.to?Math.max(.2,1-(m-s.to)/2):1);
 /* 레벨업에 드는 경험치. 11-14 대표님 목표: 10분 45~50레벨, 20분 75, 30분 100(무적 시험으로 잰 경험치 수입에 맞춤).
    앞쪽 30레벨은 할인(초반에 빨리 올라 재미있게), 높은 레벨은 증가가 완만해진다 */
-const needXp=L=>Math.max(4,Math.round(.8*(4+3*L+5*L*L/(1+L/80))*Math.min(1,.3+.7*L/30))); // .8: 스킬을 집중해 키우는 자동 플레이로 재어 맞춘 값(10분 47~54레벨, 20분 약 75, 30분 약 100 — 보스를 얼마나 빨리 잡느냐에 따라 흔들림)
+const needXp=L=>Math.max(4,Math.round(.8*(4+3*L+5*L*L/(1+L/80))*Math.min(1,.3+.7*L/30)*(L<=20?1:1+1.2*Math.pow((L-20)/30,1.5)))); // 11-15 대표님 "높은 레벨도 너무 빨라": 20레벨 뒤로 배수(50레벨 2.2배, 80레벨 4.4배) // .8: 스킬을 집중해 키우는 자동 플레이로 재어 맞춘 값(10분 47~54레벨, 20분 약 75, 30분 약 100 — 보스를 얼마나 빨리 잡느냐에 따라 흔들림)
 /* 선택지 수: 기본 3, 행운 25 에 4개, 60 에 5개 */
 const choiceCount=luck=>3+(luck>=25?1:0)+(luck>=60?1:0);
 const EARLY_CHOICE_LV=10; // 이 레벨까지는 선택지가 하나 더(초반에 고르는 재미)

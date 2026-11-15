@@ -35,7 +35,7 @@ function ddBack(){
   return false;
 }
 window.__ddHide=ddHide;window.__ddShow=ddShow;window.__ddBack=ddBack;
-cv.addEventListener('pointerdown',e=>{if(state!=='play'||paused||choosing)return;soundOn();const r=cv.getBoundingClientRect();joy={id:e.pointerId,x0:e.clientX-r.left,y0:e.clientY-r.top,x:e.clientX-r.left,y:e.clientY-r.top};try{cv.setPointerCapture(e.pointerId);}catch(_){}});
+cv.addEventListener('pointerdown',e=>{if((state!=='play'&&!(state==='lobby'&&hubFree()))||paused||choosing)return;soundOn();const r=cv.getBoundingClientRect();joy={id:e.pointerId,x0:e.clientX-r.left,y0:e.clientY-r.top,x:e.clientX-r.left,y:e.clientY-r.top};try{cv.setPointerCapture(e.pointerId);}catch(_){}});
 cv.addEventListener('pointermove',e=>{if(joy&&e.pointerId===joy.id){const r=cv.getBoundingClientRect();joy.x=e.clientX-r.left;joy.y=e.clientY-r.top;}});
 const joyEnd=e=>{if(joy&&e.pointerId===joy.id)joy=null;};cv.addEventListener('pointerup',joyEnd);cv.addEventListener('pointercancel',joyEnd);
 
@@ -54,12 +54,12 @@ function tick(raw){
     if(ending){ending.t-=raw;dt*=.3;}
     update(dt*SPEEDS[CFG.spd]);
     if(ending&&ending.t<=0)finishRun();else{if(pendingLv>0&&!ending&&!cine)uiOpenChoice();uiHud();}
-  }else if(state!=='play'){for(const p of parts){p.life-=raw;if(p.k==='ember'){p.x+=p.vx*raw;p.y+=p.vy*raw;}}parts=parts.filter(p=>p.life>0);}
+  }else if(state!=='play'){if(state==='lobby')hubUpdate(raw);for(const p of parts){p.life-=raw;if(p.k==='ember'){p.x+=p.vx*raw;p.y+=p.vy*raw;}}parts=parts.filter(p=>p.life>0);}
   bossMood+=((state==='play'&&bossRef&&!bossRef.dead?1:0)-bossMood)*Math.min(1,raw*2.2);
   if(!held){ambTick(raw);if(Math.random()<raw*16)ember(0,-26,1,9,70);}
   for(const f of flashes)f.life-=raw;flashes=flashes.filter(f=>f.life>0);
   trauma=Math.max(0,trauma-raw*1.9);const kd=Math.exp(-raw*14);kick.x*=kd;kick.y*=kd;
-  const k=1-Math.exp(-raw*7),down=state==='lobby'?H/S*.2:0; // 거점에서는 모닥불이 카드 위로 보이게
+  const k=1-Math.exp(-raw*7),down=state==='lobby'&&!$('lobby').hidden?H/S*.2:0; // 거점에서는 모닥불이 카드 위로 보이게
   let tx=P.x,ty=P.y-22+down;if(cine&&cine.e&&cine.t>.55&&cine.t<cine.max-.12){tx=cine.e.x;ty=cine.e.y-60;}
   cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;
   render(held?0:raw);

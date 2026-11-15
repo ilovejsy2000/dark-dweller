@@ -80,8 +80,8 @@ const stars=n=>'★'.repeat(n)+'☆'.repeat(4-n);
 function bestText(){const M=MAPS[mapSel],k=mapSel===0?MODES[modeSel].k:M.k+'·'+MODES[modeSel].k,b=SAVE.best[k];if(!b)return'아직 기록이 없습니다.';return (b.win?'클리어 · ':'최고 기록 '+mmss(b.t)+' · ')+`처치 ${b.kills} · 레벨 ${b.lv}`;}
 function refreshLobby(){const M=MAPS[mapSel];MODES.forEach((m,i)=>{const b=$('mode-'+i);b.setAttribute('aria-pressed',i===modeSel);b.textContent=m.t<0?`클리어 · ${M.clear/60}분`:m.k;});MAPS.forEach((m,i)=>$('map-'+i).setAttribute('aria-pressed',!riftSel&&!dailySel&&i===mapSel));
   $('mapDesc').textContent=M.d+(mapSel?` 적 체력 ${M.hp}배 · 공격 ${M.dmg}배, 높은 등급 장비가 더 잘 나옵니다.`:'')+(MODES[modeSel].t<0?` ${M.clear/60}분을 버티고 끝 보스를 잡으면 클리어입니다.`:'');$('best').textContent=bestText();riftLobbyRefresh();metaLobbyRefresh();}
-function uiLobby(){for(const id of['hud','result','pause','lvl','inv','tip'])show(id,false);modeSel=SAVE.m2||0;mapSel=SAVE.map||0;if(MAP!==MAPS[mapSel])setMap(mapSel);refreshLobby();show('lobby',true);}
-function uiStart(){soundOn();if(dailySel)dailyStart();else if(riftSel&&riftOpen()){riftStartMap(riftTier);startRun(0,riftTier);}else{riftSel=false;setMap(mapSel);startRun(modeSel);}hudC={};show('bossBar',false);show('lvl',false);/* 앞 판에서 못 잡은 보스의 체력 띠가 남지 않게(11-15) */$('toasts').innerHTML='';show('lobby',false);show('result',false);show('hud',true);uiHud();uiNote('공격은 자동입니다. 움직이기만 하세요.');}
+function uiLobby(){for(const id of['hud','result','pause','lvl','inv','tip'])show(id,false);modeSel=SAVE.m2||0;mapSel=SAVE.map||0;if(MAP!==MAPS[mapSel])setMap(mapSel);refreshLobby();show('lobby',false);hubNear=null;show('hubAct',false);hubArrive();} // 거점 = 야영지(동굴 입구에서 맵 고르기)
+function uiStart(){soundOn();if(dailySel)dailyStart();else if(riftSel&&riftOpen()){riftStartMap(riftTier);startRun(0,riftTier);}else{riftSel=false;setMap(mapSel);startRun(modeSel);}hudC={};show('bossBar',false);show('lvl',false);/* 앞 판에서 못 잡은 보스의 체력 띠가 남지 않게(11-15) */$('toasts').innerHTML='';show('lobby',false);show('result',false);show('hubTop',false);show('hubAct',false);show('hud',true);uiHud();uiNote('공격은 자동입니다. 움직이기만 하세요.');}
 
 /* ───── 레벨업 선택: 액티브 → 패시브 ───── */
 let lvStep='act',choiceAt=0;
@@ -122,7 +122,7 @@ function uiResume(){paused=false;show('pause',false);}
 const DOLL={ear1:[1,1],helm:[3,1],ear2:[5,1],weapon1:[1,2],amulet:[3,2],weapon2:[5,2],ring1:[1,3],armor:[3,3],ring3:[5,3],ring2:[1,4],belt:[3,4],ring4:[5,4],glove:[1,5],boots:[3,5]};
 let invFrom='lobby',tipPrefer=null;
 function uiInv(from){invFrom=from;tipPrefer=null;show(from==='pause'?'pause':'lobby',false);show('inv',true);renderInv();}
-function closeInv(){show('tip',false);show('inv',false);if(invFrom==='pause'){renderOwned();show('pause',true);}else{refreshLobby();show('lobby',true);}}
+function closeInv(){endSel();show('tip',false);show('inv',false);if(invFrom==='pause'){renderOwned();show('pause',true);}else refreshLobby();}
 function cellFor(it){const c=el('button','cell');c.type='button';if(it){c.classList.add('g'+it.gi);if(it.prime)c.classList.add('prime');c.style.setProperty('--gc',gradeColor(it));c.style.backgroundImage=`url(${itemIconURL(it)})`;c.setAttribute('aria-label',`${gradeName(it)} ${it.name}`);c.append(el('small',null,itemQuality(it)));}return c;}
 /* 장비 내용: 줄마다 지금 수치와 그 등급에서 나올 수 있는 최대치를 나란히 보여 준다 */
 function describe(box,it){const G={c:gradeColor(it),k:gradeName(it)},hd=el('div','ihd');const im=el('img');im.src=itemIconURL(it);im.alt='';const tt=el('div');
@@ -140,11 +140,27 @@ function openTip(it,slot){
   else{const ts=targetSlot(it.t,tipPrefer),old=SAVE.equip[ts];
     row.append(btn('장착',()=>{equipItem(it,ts);SFX.loot(Math.max(1,it.gi));show('tip',false);renderInv();},'go sm'),btn('재련',()=>{SFX.ui();openRefine(it,null);},'ghost'),confirmBtn(`분해 (가루 +${dustOf(it)})`,()=>{discardItem(it);show('tip',false);renderInv();}));
     if(old){const c=el('div','cmp');c.append(el('div','ct',`지금 낀 것 · ${gradeName(old)} ${old.name}`));for(const l of old.lines)c.append(el('div',null,fmtLine(l.k,l.v)));if(old.fx)c.append(el('div',null,'고유 효과 · '+FXS[old.fx]));card.append(c);}}
+  if(invFrom==='pause'){for(const b of[...row.children])if(/재련|분해/.test(b.textContent))b.remove();card.append(el('div','fx','재련·분해는 야영지의 대장간에서 할 수 있습니다.'));}
   row.append(btn('닫기',()=>show('tip',false)));card.append(row);show('tip',true);
 }
-function renderBulk(){const box=$('bulk');box.innerHTML='';const cnt=[0,0,0,0,0];for(const it of SAVE.stash)cnt[it.gi]++;
-  if(cnt[0]+cnt[1]+cnt[2]===0)return;box.append(el('span',null,'한 번에 분해'));
-  for(let gi=0;gi<3;gi++)if(cnt[gi])box.append(confirmBtn(`${GRADES[gi].k} ${cnt[gi]}개`,()=>{discardGrade(gi);renderInv();}));}
+/* 고르기 모드: 창고 장비를 꾹 누르면(0.45초) 켜지고, 누를 때마다 체크. 아래 띠에서 한꺼번에 분해. 신화는 '모두 고르기'에 안 들어간다 */
+let selMode=false;const sel=new Set();
+function holdable(c,fn){let t=0,x=0,y=0;const clear=()=>{clearTimeout(t);t=0;};
+  c.addEventListener('pointerdown',e=>{x=e.clientX;y=e.clientY;clear();t=setTimeout(()=>{t=0;c._held=1;fn();},450);});
+  c.addEventListener('pointermove',e=>{if(t&&Math.hypot(e.clientX-x,e.clientY-y)>10)clear();});
+  for(const ev of['pointerup','pointercancel','pointerleave'])c.addEventListener(ev,clear);c.addEventListener('contextmenu',e=>e.preventDefault());}
+function toggleSel(id){if(sel.has(id))sel.delete(id);else sel.add(id);if(!sel.size)selMode=false;renderInv();}
+function endSel(){selMode=false;sel.clear();}
+function renderBulk(){const box=$('bulk');box.innerHTML='';if(invFrom==='pause'){box.classList.remove('selbar');return;}
+  if(selMode){const items=SAVE.stash.filter(it=>sel.has(it.id)),dust=items.reduce((a,it)=>a+dustOf(it),0),my=items.some(it=>it.gi===4);
+    box.classList.add('selbar');box.append(el('span',null,`${items.length}개 고름`),
+      btn('신화 빼고 모두',()=>{for(const it of SAVE.stash)if(it.gi<4)sel.add(it.id);SFX.ui();renderInv();},'ghost'),
+      confirmBtn(`분해 · 가루 +${dust}`+(my?' (신화 포함)':''),()=>{for(const it of items)discardItem(it);SFX.loot(1);endSel();renderInv();uiNote2(`${items.length}개를 분해했습니다. 마력 가루 +${dust}`);}),
+      btn('취소',()=>{endSel();SFX.ui();renderInv();},'ghost'));return;}
+  box.classList.remove('selbar');const cnt=[0,0,0,0,0];for(const it of SAVE.stash)cnt[it.gi]++;
+  if(SAVE.stash.length)box.append(btn('여러 개 고르기',()=>{selMode=true;SFX.ui();renderInv();},'ghost'));
+  if(cnt[0]+cnt[1]+cnt[2]+cnt[3]===0)return;box.append(el('span',null,'한 번에 분해'));
+  for(let gi=0;gi<4;gi++)if(cnt[gi])box.append(confirmBtn(`${GRADES[gi].k} ${cnt[gi]}개`,()=>{discardGrade(gi);renderInv();}));}
 function renderStats(){const box=$('statList');box.innerHTML='';
   const val=k=>{const v=ST[k],s=STAT[k];if(k==='hp'||k==='def'||k==='luck')return String(Math.round(v));if(k==='regen')return v.toFixed(1)+'/초';if(k==='crit'||k==='critd'||k==='mres')return Math.round(v)+'%';return (s.neg?'-':'+')+Math.round(v)+'%';};
   for(const k of STAT_ORDER){const r=el('div');r.append(el('span',null,STAT[k].n),el('span',null,val(k)));box.append(r);}
@@ -156,7 +172,9 @@ function renderInv(){
     c.addEventListener('click',()=>{SFX.ui();if(it)openTip(it,sk);else{tipPrefer=sk;uiNote2(`${SLOT_TYPES[type].n} 칸입니다. 아래 창고에서 ${SLOT_TYPES[type].n} 장비를 누르세요.`);}});doll.append(c);}
   const sg=$('stashGrid'),top=sg.scrollTop;sg.innerHTML='';
   const list=SAVE.stash.slice().sort((a,b)=>itemScore(b)-itemScore(a)||a.id-b.id);
-  for(const it of list){const c=cellFor(it);c.id='st-'+it.id;c.addEventListener('click',()=>{SFX.ui();openTip(it,null);});sg.append(c);}
+  for(const it of list){const c=cellFor(it);c.id='st-'+it.id;if(selMode){c.classList.add('selmode');if(sel.has(it.id))c.classList.add('sel');}
+    c.addEventListener('click',()=>{if(c._held){c._held=0;return;}SFX.ui();if(selMode)toggleSel(it.id);else openTip(it,null);});
+    holdable(c,()=>{if(invFrom==='pause')return;selMode=true;buzz(15);SFX.ui();toggleSel(it.id);});sg.append(c);}
   if(!list.length)sg.append(el('p','empty-note','창고가 비어 있습니다. 판에서 주운 장비가 여기에 쌓입니다.'));
   sg.scrollTop=top;$('stashCount').textContent=`${SAVE.stash.length} / ${STASH_MAX} · 마력 가루 ${SAVE.dust||0}`;$('invNote').textContent='';
   renderBulk();renderStats();
@@ -186,11 +204,11 @@ function closeCfg(){show('cfg',false);if(cfgHeld){paused=false;cfgHeld=false;}}
 function uiInit(){
   MAPS.forEach((m,i)=>{const b=btn('',()=>{mapSel=i;riftSel=false;dailySel=false;SFX.ui();soundOn();setMap(i);saveNow();refreshLobby();},'');b.id='map-'+i;b.append(el('b',null,m.k),el('i',null,stars(m.star)));$('maps').append(b);});
   MODES.forEach((m,i)=>{const b=btn(m.k,()=>{modeSel=i;SFX.ui();soundOn();refreshLobby();},'');b.id='mode-'+i;$('modes').append(b);});
-  riftLobbyInit();metaLobbyInit();
+  riftLobbyInit();metaLobbyInit();hubInit();
   for(const[k,label,vals]of OPTS){const row=el('div','row');row.append(el('span',null,label));const seg=el('div','seg');
     vals.forEach((v,i)=>{const b=btn(v,()=>{CFG[k]=i;applyCfg();soundOn();SFX.ui();if(k==='vib'&&i)buzz(30);},'');b.id=`cfg-${k}-${i}`;b.dataset.k=k;b.dataset.v=i;seg.append(b);});
     row.append(seg);$('cfgRows').append(row);}
-  $('goBtn').addEventListener('click',uiStart);
+  $('goBtn').addEventListener('click',()=>{if(state==='lobby')hubDepart();else uiStart();}); // 거점에서는 동굴 밖으로 걸어 나간 뒤 시작
   $('rerollBtn').addEventListener('click',()=>{if(RUN.rerolls<=0||performance.now()-choiceAt<350)return;RUN.rerolls--;SFX.ui();renderChoice();});
   $('invBtn').addEventListener('click',()=>{soundOn();SFX.ui();uiInv('lobby');});
   $('invBtn2').addEventListener('click',()=>{SFX.ui();uiInv('pause');});

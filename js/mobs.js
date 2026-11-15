@@ -47,7 +47,7 @@ ET.ninja={...fbk('shaman'),art:['d',4,62],n:'그림자 자객',ai:'blink',r:15,h
 ET.icesp={...fbk('wisp'),art:['d',5,56],n:'얼음 정령',ai:'frost',r:13,hp:140,spd:56,dmg:16,xp:4,anim:1.3,kb:.9,float:true,magic:true,mres:.5,light:70,deb:['#bfe9ff','#86c2ec','#f4fcff']};
 ET.garg={...fbk('wisp'),art:['d',6,64],n:'가고일',ai:'weave',r:16,hp:220,spd:82,dmg:20,xp:4,anim:2,kb:.6,float:true,def:.5,pack:2,deb:ROCK};
 ET.turtle={...fbk('moss'),art:['d',7,78],n:'용암 거북',ai:'trail',r:21,hp:520,spd:34,dmg:24,xp:7,anim:1,kb:.3,def:.4,light:70,deb:['#4a7c54','#ff8a2e','#2b2839']};
-ET.mimic={...fbk('moss'),art:['d',8,66],n:'미믹',ai:'mimic',r:18,hp:650,spd:60,dmg:30,xp:12,anim:2.4,kb:.4,loot:.4,deb:['#b08845','#6b4630','#e0524f']};
+ET.mimic={...fbk('moss'),art:['d',8,66],n:'미믹',ai:'mimic',r:18,hp:650,spd:60,dmg:30,xp:12,anim:2.4,kb:.4,loot:.3,deb:['#b08845','#6b4630','#e0524f']};
 /* 등장 비용: 단단하고 떼로 나오는 적일수록 크다(0.8~2.8) */
 for(const id in ET){const T=ET[id];T.cost=clamp(Math.sqrt((T.hp||70)/70)*Math.pow(T.pack||1,.7),.8,2.8);}
 /* 정예(30초마다): 보통 적의 열다섯 배쯤 단단하고, 걸린 상태이상이 절반만 간다 */

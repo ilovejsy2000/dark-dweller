@@ -64,6 +64,8 @@ function gearInfo(it){
 /* 그린 그림(img/gear.png): 192칸짜리 그림판, 한 줄에 6개. 번호는 왼쪽 위부터.
    GEAR_ART[종류][장비 번호] = 그림판 번호. 그림이 없는 것은 같은 종류의 다른 그림이나 위의 코드 그림을 쓴다. */
 const gearAtlas=new Image();gearAtlas.src='img/gear.png';
+const gearAtlas2=new Image();gearAtlas2.src='img/gear2.png'; // 무협 장비(11-15)
+const atlasOf=a=>a>=100?[gearAtlas2,a-100]:[gearAtlas,a];
 const GEAR_CELL=144,GEAR_COLS=6;
 const GEAR_ART={weapon:[0,1,2,3],helm:[4,5,6],armor:[9,10,11],glove:[12,13],belt:[14,15],boots:[16,17,18],amulet:[19,20,21],ear:[22,23,24],ring:[25,26,44]};
 /* 신화 장비는 이름마다 제 그림(my 번호 순), 전설 장비 몇 개도 제 그림(lg 번호) */
@@ -75,12 +77,12 @@ function gearArt(it){
   if(it.gi===3){const L=(LEGENDS[it.t]||[])[it.lg];if(L&&L.n===nm)a=(GEAR_ART_LEG[it.t]||{})[it.lg];if(a===undefined)a=(GEAR_ART[it.t]||[])[it.b||0];}
   else if(it.gi===4){const M0=(MYTHS[it.t]||[])[it.my];if(M0&&M0.n===nm)a=(GEAR_ART_MYTH[it.t]||[])[it.my];if(a===undefined){const M=MYTHS[it.t][it.my]||MYTHS[it.t][0];a=(GEAR_ART[it.t]||[])[M.i||0];}}
   else a=(GEAR_ART[it.t]||[])[it.b||0];
-  return a===undefined||!gearAtlas.complete||!gearAtlas.naturalWidth?-1:a;
+  if(a===undefined)return -1;const im=atlasOf(a)[0];return !im.complete||!im.naturalWidth?-1:a;
 }
 /* 판 위(바닥에 떨어진 장비)에 그리기: 가운데가 원점, size 는 한 변 길이 */
 function drawGearAt(g,it,size){
   const a=gearArt(it);
-  if(a>=0){g.imageSmoothingQuality='high';g.drawImage(gearAtlas,(a%GEAR_COLS)*GEAR_CELL,(a/GEAR_COLS|0)*GEAR_CELL,GEAR_CELL,GEAR_CELL,-size/2,-size/2,size,size);}
+  if(a>=0){const[im,b]=atlasOf(a);g.imageSmoothingQuality='high';g.drawImage(im,(b%GEAR_COLS)*GEAR_CELL,(b/GEAR_COLS|0)*GEAR_CELL,GEAR_CELL,GEAR_CELL,-size/2,-size/2,size,size);}
   else{const sp=gearSprite(it),k=size/30;g.drawImage(sp.c,-sp.ox*k,-sp.oy*k,sp.w*k,sp.h*k);}
 }
 /* 장비 칸에 넣을 그림 주소. 파일을 직접 열어(인터넷 주소 없이) 그림을 읽지 못하면 코드 그림으로 돌아간다 */
@@ -89,7 +91,7 @@ function gearURL(it){
   const a=gearArt(it);
   if(a>=0){if(gearURLs[a])return gearURLs[a];
     try{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.imageSmoothingQuality='high';
-      g.drawImage(gearAtlas,(a%GEAR_COLS)*GEAR_CELL,(a/GEAR_COLS|0)*GEAR_CELL,GEAR_CELL,GEAR_CELL,0,0,128,128);return gearURLs[a]=c.toDataURL();}catch(_){}}
+      const[im,b]=atlasOf(a);g.drawImage(im,(b%GEAR_COLS)*GEAR_CELL,(b/GEAR_COLS|0)*GEAR_CELL,GEAR_CELL,GEAR_CELL,0,0,128,128);return gearURLs[a]=c.toDataURL();}catch(_){}}
   const sp=gearSprite(it);return sp.url||(sp.url=sp.c.toDataURL());
 }
 const gearCache={};

@@ -8,7 +8,7 @@ let rift=null,riftSel=false,riftTier=1;
 const riftOpen=()=>['심연·클리어','심연·30분','심연·1시간'].some(k=>SAVE.best[k]&&SAVE.best[k].win);
 const riftMax=()=>Math.max(1,(SAVE.rift&&SAVE.rift.open)||1);
 /* 단계마다 적 체력 ×1.17, 공격 ×1.09. 1단계도 서리 폐허쯤 */
-function riftMap(tier,mi){const B=MAPS[mi];return Object.assign({},B,{k:'영겁의 굴레',base:mi,rift:1,hp:1.6*Math.pow(1.17,tier-1),dmg:1.3*Math.pow(1.09,tier-1),spawn:1.15,
+function riftMap(tier,mi){const B=MAPS[mi];return Object.assign({},B,{k:'영겁의 굴레',base:mi,rift:1,hp:2.6*Math.pow(1.17,tier-1),dmg:1.5*Math.pow(1.09,tier-1),spawn:1.15,
   champ:Math.min(.25,.04+.01*tier),loot:Math.min(4,.6+.15*tier),floor:Math.min(.5,.1+.02*tier),clear:0});}
 /* 게이지: 보통 적 1, 강화된 적 4, 정예 15, 수호 보스 40 */
 const riftNeed=tier=>5000+tier*50; // 무적 자동 플레이로 재어 1단계 수호자가 5~6분쯤 나오게(11-15)
@@ -27,7 +27,7 @@ function riftWin(){const r=rift,rem=RIFT_T-runT;r.done=true;r.gain=rem>=RIFT_T*.
   const R=SAVE.rift||(SAVE.rift={open:1,best:0,bestT:0});R.open=Math.max(R.open||1,r.tier+r.gain);
   if(r.tier>R.best||(r.tier===R.best&&runT<(R.bestT||1e9))){R.best=r.tier;R.bestT=Math.floor(runT);}
   riftTier=Math.min(R.open,r.tier+r.gain);
-  const n=Math.min(8,2+(r.tier/2|0));for(let i=0;i<n;i++)addLoot(makeItem(rollGrade(2,lootBoost()+1+r.tier*.2),curFloor()));}
+  const n=Math.min(6,1+(r.tier/3|0));for(let i=0;i<n;i++)addLoot(makeItem(rollGrade(2,lootBoost()+1+r.tier*.2),curFloor()));}
 function riftGoal(){if(!rift)return'';if(rift.guard)return'수호자를 잡으세요';return`굴레 ${Math.floor(rift.prog/rift.need*100)}%`;}
 function riftTitle(win){return win?`${rift.tier}단계 성공`:rift.done&&runT>=RIFT_T?'시간 초과':'쓰러졌습니다';}
 function riftSum(win){const r=rift;return win?`남은 시간 ${mmss(Math.max(0,RIFT_T-runT))} · 다음 단계 +${r.gain} · 레벨 ${P.level} · 처치 ${kills}`:`${r.tier}단계 · 굴레 ${Math.floor(r.prog/r.need*100)}% · 레벨 ${P.level} · 처치 ${kills}`;}

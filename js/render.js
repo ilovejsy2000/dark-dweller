@@ -64,8 +64,9 @@ function render(dt){
   const L=cx-vw/2,T=cy-vh/2,R=cx+vw/2,B=cy+vh/2,dl=[],burn=state==='play'&&burnT>0;
   if(burn&&dt>0&&Math.random()<dt*45)ember(rand(L,R),rand(T,B)+40,1,4,70);
   // 땅
-  for(let j=Math.floor(T/CH);j<=Math.floor(B/CH);j++)for(let i=Math.floor(L/CH);i<=Math.floor(R/CH);i++)ctx.drawImage(getChunk(i,j),i*CH,j*CH,CH+.6,CH+.6);
-  for(let j=Math.floor((T-160)/CH);j<=Math.floor((B+160)/CH);j++)for(let i=Math.floor((L-80)/CH);i<=Math.floor((R+80)/CH);i++)for(const p of getProps(i,j))dl.push(p);
+  if(state==='lobby')drawCaveFloor(L,T,R,B); // 거점 = 동굴 안
+  else for(let j=Math.floor(T/CH);j<=Math.floor(B/CH);j++)for(let i=Math.floor(L/CH);i<=Math.floor(R/CH);i++)ctx.drawImage(getChunk(i,j),i*CH,j*CH,CH+.6,CH+.6);
+  for(let j=Math.floor((T-160)/CH);j<=Math.floor((B+160)/CH);j++)for(let i=Math.floor((L-80)/CH);i<=Math.floor((R+80)/CH);i++)for(const p of getProps(i,j))if(state!=='lobby')dl.push(p);
   // 얼룩
   for(const s of splats){const r=rng(s.sd);ctx.fillStyle=`rgba(12,10,22,${Math.min(.5,s.life*.25)})`;for(let i=0;i<5;i++){ell(ctx,s.x+(r()-.5)*s.r*1.6,s.y+(r()-.5)*s.r*.7,s.r*(.25+r()*.5),s.r*(.12+r()*.2),r()*3);ctx.fill();}}
   lights.length=0;
@@ -95,7 +96,7 @@ function render(dt){
   // 세로 순서대로
   for(const e of enemies){if(e.x<L-110||e.x>R+110||e.y<T-60||e.y>B+220)continue;dl.push(e);if(e.T.light&&lights.length<16)lights.push([e.x,e.y-34,e.T.light,.62]);if(e.elite)lights.push([e.x,e.y-70*e.sc,95*e.sc,.5]);}
   for(const d of drops)dl.push(d);for(const a of allies)dl.push(a);for(const c of chests)if(c.x>L-60&&c.x<R+60&&c.y>T-60&&c.y<B+80)dl.push(c);for(const g of gims)if(g.x>L-420&&g.x<R+420&&g.y>T-300&&g.y<B+300)dl.push(g);
-  dl.push({kind:'hero',y:P.y},{kind:'fire',y:0});
+  dl.push({kind:'hero',y:P.y},{kind:'fire',y:0});if(state==='lobby')hubDrawList(dl);
   dl.sort((a,b)=>a.y-b.y);
   for(const o of dl){switch(o.kind){
     case'enemy':drawEnemy(o);break;
@@ -104,6 +105,8 @@ function render(dt){
     case'ally':drawAlly(o);break;
     case'chest':drawChest(o);break;
     case'gim':drawGim(o);break;
+    case'hub':drawHub(o);break;
+    case'rock':drawCaveRock(o);break;
     case'hero':drawHeroWorld();break;
     case'fire':blit(fireBase,0,0,1,1);drawFlame(ctx,0,-6,clock,1);break;}}
   // 조각·연기
@@ -152,7 +155,7 @@ function render(dt){
 
   // 어둠과 빛 (계단식 밝기 = 만화풍 조명). 보스가 있으면 붉게 가라앉는다
   const fl=Math.sin(clock*11)*6+Math.sin(clock*23.7)*4,bm=bossMood;
-  const D=MAP.dark;lights.push([0,-18,330+fl,1]);if(!P.dead)lights.push([P.x,P.y-22,MAP.light*GIM.light,.86]);
+  if(state==='lobby')hubLights();const D=state==='lobby'?CAVE_DARK:MAP.dark;lights.push([0,-18,330+fl,1]);if(!P.dead)lights.push([P.x,P.y-22,MAP.light*GIM.light,.86]);
   for(const f of flashes)lights.push([f.x,f.y,f.r*(.6+.4*f.life/f.max),f.life/f.max]);
   lg.setTransform(1,0,0,1,0,0);lg.globalCompositeOperation='source-over';lg.clearRect(0,0,lightC.width,lightC.height);
   lg.fillStyle=`rgba(${D[0]+30*bm|0},${Math.max(0,D[1]-5*bm)|0},${Math.max(0,D[2]-10*bm)|0},${Math.min(.8,D[3]+.06*bm)})`;lg.fillRect(0,0,lightC.width,lightC.height);lg.globalCompositeOperation='destination-out';
@@ -172,7 +175,7 @@ function render(dt){
   for(const s of storms)for(const[x,y]of s.pts)glow(x,y,30,'rgb(150,225,255)',.4*(1-s.t/s.life));
   for(const s of saws)glow(s.x,s.y,44,'rgb(200,215,255)',.32);
   for(const o of orbs)glow(o.x,o.y,60,'rgb(120,130,255)',.7);
-  render2glow();renderWorldGlow();gimGlow();metaGlow();
+  render2glow();renderWorldGlow();gimGlow();metaGlow();hubGlow();
   for(const a of axes)glow(a.x,a.y,30*a.size,'rgb(200,215,255)',.3);
   for(const mt of meteors){if(mt.t>.75)continue;const hgt=mt.t/.75*560;glow(mt.x+hgt*.25,mt.y-hgt,70,'rgb(255,140,50)',.7);}
   for(const z of zones)if(z.k==='fire')glow(z.x,z.y-8,z.R*1.2,'rgb(255,120,40)',.3*Math.min(1,z.life*1.5));

@@ -368,6 +368,17 @@ h2{font-size:28px}
 .cxh{font:16px var(--font-display);color:var(--yel)}
 .cxg.names span{background:#36407e;border:2px solid var(--ink)}
 #saveBox{border:2px solid var(--ink);border-radius:12px}
+.cell.selmode::after{content:'';position:absolute;left:3px;top:3px;width:15px;height:15px;border-radius:50%;border:2px solid var(--ink);background:rgba(255,255,255,.85);box-sizing:border-box}
+.cell.sel{outline:3px solid var(--yel);outline-offset:-1px}.cell.sel::after{content:'✓';background:var(--yel);color:var(--ink);font:900 10px/11px var(--font-body);text-align:center}
+.cell{-webkit-touch-callout:none;touch-action:manipulation}
+#bulk.selbar{position:sticky;bottom:0;z-index:2;background:var(--panel-1);border:3px solid var(--ink);border-radius:16px;padding:8px;box-shadow:0 4px 0 rgba(8,10,26,.6)}#bulk.selbar span{color:#fff;font:15px var(--font-display)}
+#hubTop{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:12px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));pointer-events:none;z-index:2}
+#hubTop .hres{display:grid;gap:3px}#hubTop .hres b{font:26px var(--font-display)}#hubTop .hres span{font:13px var(--font-display);color:#fff;text-shadow:var(--outline)}
+#hubTop .hbtns{display:flex;gap:6px;pointer-events:auto}#hubTop .ghost{padding:6px 12px;font-size:14px}
+#hubAct{position:absolute;left:50%;bottom:max(34px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2;white-space:nowrap;font-size:20px;padding:9px 30px;animation:actIn .2s ease-out both}
+@keyframes actIn{from{transform:translate(-50%,10px);opacity:0}to{transform:translateX(-50%);opacity:1}}
+#fade{position:absolute;inset:0;z-index:20;background:#05060f;display:grid;place-items:center;pointer-events:none}#fade.out{transition:opacity .6s ease-out}#fade b{font:30px var(--font-display);color:#dfe8ff;text-shadow:var(--outline)}
+#hubHint{position:absolute;left:50%;top:84px;transform:translateX(-50%);width:max-content;max-width:86vw;text-align:center;z-index:2;font:14px var(--font-display);color:#fff;background:rgba(22,27,54,.9);border:3px solid var(--ink);border-radius:16px;padding:7px 14px;pointer-events:none}
 .btns.nav5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.btns.nav5 .ghost{padding:7px 0;font-size:14px;white-space:nowrap}
 @media (prefers-reduced-motion: reduce){#banner,.toast,#cine .ttl,.choice.rare{animation:none}}
 </style>
@@ -394,6 +405,11 @@ h2{font-size:28px}
     <div id="toasts" aria-live="polite"></div>
   </div>
 
+  <div id="hubTop" hidden><div class="hres"><b class="gold">다크 드웰러</b><span id="hubRes"></span></div><div class="hbtns"><button class="ghost" id="helpBtn" type="button">설명</button><button class="ghost" id="cfgBtn" type="button">설정</button><span hidden><button id="invBtn" type="button"></button><button id="talBtn" type="button"></button><button id="cxBtn" type="button"></button></span></div></div>
+  <button id="hubAct" class="go" type="button" hidden></button>
+  <div id="hubHint" hidden>동굴 안을 걸어 보세요. 대장간 · 창고 · 제단 · 비석에 다가가면 열리고, 아래 출구로 나가면 출발합니다.</div>
+  <div id="fade" hidden><b id="fadeTxt"></b></div>
+
   <div id="cine" hidden><div class="ttl"><small id="cineSub"></small><b id="cineName" class="gold"></b></div></div>
 
   <div id="lobby" class="overlay bottom">
@@ -409,8 +425,7 @@ h2{font-size:28px}
       <div class="modes" id="modes"></div>
       <div class="modes" id="tierRow" hidden></div>
       <p class="sub" id="best"></p>
-      <div class="btns"><button class="go" id="goBtn" type="button">출발</button></div>
-      <div class="btns nav5"><button class="ghost" id="invBtn" type="button">장비</button><button class="ghost" id="talBtn" type="button">특성</button><button class="ghost" id="cxBtn" type="button">도감</button><button class="ghost" id="helpBtn" type="button">설명</button><button class="ghost" id="cfgBtn" type="button">설정</button></div>
+      <div class="btns"><button class="ghost" id="campBtn" type="button">야영지로</button><button class="go" id="goBtn" type="button">출발</button></div>
     </div>
   </div>
 
@@ -512,6 +527,7 @@ h2{font-size:28px}
 <script src="js/data.js"></script>
 <script src="js/extra.js"></script>
 <script src="js/gear.js"></script>
+<script src="js/wuxia.js"></script>
 <script src="js/game.js"></script>
 <script src="js/skills2.js"></script>
 <script src="js/relics.js"></script>
@@ -523,7 +539,8 @@ h2{font-size:28px}
 <script src="js/help.js"></script>
 <script src="js/rift.js"></script>
 <script src="js/meta.js"></script>
+<script src="js/hub.js"></script>
 <script src="js/main.js"></script>
 
-<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611150713';</script>
+<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611150848';</script>
 </html>

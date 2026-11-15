@@ -56,7 +56,7 @@ function recalc(){
   if(state==='play')for(const id in P.pas){const p=PASSIVES[id];s[p.stat]+=p.v*P.pas[id];if(p.stat2)s[p.stat2]+=p.v2*P.pas[id];}
   talentApply(s);relicRecalc(s,fx);
   s.cdr=Math.min(35,s.cdr);s.move=clamp(s.move,-50,100);s.crit=Math.min(100,s.crit);s.mres=Math.min(75,s.mres);
-  ST=s;FX=fx;AREA=1+s.area/100;P.maxhp=s.hp;P.hp=state==='play'?Math.min(P.hp,P.maxhp):P.maxhp;
+  ST=s;FX=fx;AREA=softArea(1+s.area/100);P.maxhp=s.hp;P.hp=state==='play'?Math.min(P.hp,P.maxhp):P.maxhp;
 }
 
 /* ───── 한 판의 상태 ───── */
@@ -100,7 +100,7 @@ function buzz(ms){if(reduce||!CFG.vib)return;try{navigator.vibrate&&navigator.vi
 
 /* ───── 전투 ───── */
 /* 쿨타임: 기본의 1.4배로 느리게(11-14 대표님 "스킬 속도를 줄여야"). 공격 속도·쿨타임 감소를 다 모아도 기본의 55% 아래로는 안 내려간다 */
-const CD_SLOW=1.4,cdOf=c=>Math.max(c*.55,c/(1+(ST.aspd+(P.valkT>0?15*(FX.valk||0):0))/100)*(1-ST.cdr/100))*CD_SLOW;
+const CD_SLOW=1.6,cdOf=c=>Math.max(c*.55,c/(1+(ST.aspd+(P.valkT>0?15*(FX.valk||0):0))/100)*(1-ST.cdr/100))*CD_SLOW;
 const lootBoost=()=>1+runT/60*.08+ST.luck*.01+MAP.loot;
 function reactFx(e,txt,col){if(can('rx',220))textFx(e.x,e.y-e.r*2.4,txt,col);}
 function nearest(x,y,max,skip){let b=null,bd=max*max;for(const e of enemies){if(e.dead||(skip&&skip.has(e)))continue;const dx=e.x-x,dy=e.y-y,d=dx*dx+dy*dy;if(d<bd){bd=d;b=e;}}return b;}
@@ -120,12 +120,12 @@ function hitEnemy(e,base,nx,ny,kb,kind,quiet,heavy){
   if(FX.firstBlood&&e.hp>=e.maxhp)d*=1+.4*FX.firstBlood;
   if(e.weak>0)d*=1.2;
   /* 적의 방어(베기·둔기)와 마법 저항(불·번개·얼음·독·빛) */
-  const phys=kind==='cut'||kind==='thud',rs=(phys?e.def:e.mres)||0;if(rs){d*=1-rs;if(rs>=.4&&can('rs',1500))textFx(e.x,e.y-e.r*2.6,phys?'단단함':'저항','#9aa3bf');}
+  const phys=kind==='cut'||kind==='thud',rs=((phys?e.def:e.mres)||0)*(FX.yicheon?.5:1);if(rs){d*=1-rs;if(rs>=.4&&can('rs',1500))textFx(e.x,e.y-e.r*2.6,phys?'단단함':'저항','#9aa3bf');}
   /* 원소 반응: 얼거나 느려진 적 + 불 = 융해(피해 1.6배), 멈춘 적 + 베기 = 급소(치명타 확정), 불타는 적 + 번개 = 과부하(주위 폭발) */
   let crit=Math.random()*100<ST.crit;
   if(kind==='fire'&&(e.ice>0||e.slow>0)){d*=1.6;e.ice=0;e.slow=0;reactFx(e,'융해','#ffb347');}
   else if(kind==='cut'&&e.stun>0&&!e.boss&&!crit){crit=true;reactFx(e,'급소','#fff6dc');}
-  if(crit)d*=ST.critd/100;
+  if(crit){d*=ST.critd/100;wuxCrit();}
   d=Math.max(1,Math.round(d));
   e.hp-=d;e.flash=.11;e.hitT=.16;const k=kb*1.2*e.T.kb/e.sc;e.kx+=nx*k;e.ky+=ny*k;
   if(crit||clock-(e.nT||-9)>.28){e.nT=clock;numFx(e.x+rand(-9,9),e.y-e.r*1.7-rand(0,12),d,crit);} // 보통 피해 숫자는 적마다 0.28초에 하나만
@@ -151,9 +151,9 @@ function killEnemy(e){
   onKill2(e);relicOnKill(e);if(e.guard)guardLoot(e);if(rift)riftKill(e);metaKill(e);
   if(T.split&&enemies.length<400)for(let i=0;i<3;i++){const a=i*TAU/3;spawn(T.split,{at:[e.x+Math.cos(a)*22,e.y+Math.sin(a)*16]});} // 분홍 젤리: 꼬마 젤리 셋으로 갈라짐
   if(big){buzz(e.boss?80:40);shake(e.boss?.9:.5);freeze=Math.max(freeze,e.boss?.25:.1);flash(e.x,e.y-40,420,.4);SFX.boom();
-    const cnt=e.guard?0:e.boss?2:1;for(let i=0;i<cnt;i++)dropItem(e.x,e.y,rollGrade(e.boss?2:1,lootBoost()+(e.boss?1.5:.5)),i*.09);
+    const cnt=e.guard?0:e.boss?1:(Math.random()<.6?1:0); // 11-15 대표님 "아이템 나오는 양을 줄여": 보스 2→1, 정예 1→60%for(let i=0;i<cnt;i++)dropItem(e.x,e.y,rollGrade(e.boss?2:1,lootBoost()+(e.boss?1.5:.5)),i*.09);
     if(e.boss===2)winRun();
-  }else{SFX.kill();if(can('kp',70))shake(.035);if(Math.random()<(e.champ?.1:T.loot||.012)*(1+ST.luck/100)*(burnT>0?2:1)*(1+.3*(FX.golden||0)))dropItem(e.x,e.y,rollGrade(e.champ?1:0,lootBoost()),0);}
+  }else{SFX.kill();if(can('kp',70))shake(.035);if(Math.random()<(e.champ?.06:T.loot||.007)*(1+ST.luck/100)*(burnT>0?2:1)*(1+.3*(FX.golden||0)))dropItem(e.x,e.y,rollGrade(e.champ?1:0,lootBoost()),0);}
 }
 function dropItem(x,y,gi,delay){const a=Math.random()*TAU;drops.push({kind:'drop',it:makeItem(gi,curFloor()),x,y,z:0,vx:Math.cos(a)*rand(50,110),vy:Math.sin(a)*rand(30,70),vz:rand(280,360),wait:delay,landed:false,t:0,seed:Math.random()*9});}
 function addLoot(it){if(SAVE.stash.length>=STASH_MAX)return false;SAVE.stash.push(it);runLoot.push(it);cxGear(it);return true;}
@@ -161,14 +161,14 @@ function addLoot(it){if(SAVE.stash.length>=STASH_MAX)return false;SAVE.stash.pus
 function hurt(d,magic){
   if(P.inv>0||P.dead||ending||cine)return;
   if(relicBlock())return;RUN.lastHurt=runT;
-  P.hp-=(magic?d*(1-ST.mres/100):d*100/(100+ST.def))*relicTaken()*RUN.taken;P.inv=.22;relicOnHurt();shake(.3);SFX.hurt();buzz(35);flash(P.x,P.y-20,160,.15);
+  P.hp-=wuxHurt((magic?d*(1-ST.mres/100):d*100/(100+ST.def))*relicTaken()*RUN.taken);P.inv=Math.max(P.inv,.22);relicOnHurt();shake(.3);SFX.hurt();buzz(35);flash(P.x,P.y-20,160,.15);
   if(FX.thorns)for(const e of enemies){const dx=e.x-P.x,dy=e.y-P.y,dd=Math.hypot(dx,dy)||1;if(dd<130+e.r)hitEnemy(e,28*(1+P.level*.1)*FX.thorns,dx/dd,dy/dd,320,'thud');}
   if(P.hp<=0&&(relicRevive()||metaRevive()))return;
   if(P.hp<=0){P.hp=0;P.dead=true;ending={win:false,t:1.3};debris(P.x,P.y,['#f3e6c8','#2f7b7e','#f08a3c'],12,1.3);puff(P.x,P.y-20,8);}
 }
 function winRun(){
   ending={win:true,t:2.6};const mi=mapIdx();
-  if(rift)riftWin();else for(let i=0;i<3+mi;i++)addLoot(makeItem(rollGrade(2,lootBoost()+1+mi),curFloor()));
+  if(rift)riftWin();else for(let i=0;i<2+mi;i++)addLoot(makeItem(rollGrade(2,lootBoost()+1+mi),curFloor()));
   for(const e of enemies)if(!e.dead){e.dead=true;puff(e.x,e.y-e.r*.6,2);}
   eshots=[];warns=[];flash(P.x,P.y-20,600,.8);SFX.level();
 }
@@ -215,8 +215,9 @@ function takeChoice(kind,id){
 }
 /* 스킬 단계마다 붙는 옵션. ups[i] = (i+2)단계가 될 때 얻는 것. 다 얻은 뒤에는 단계마다 피해 +12% */
 function calcPerks(id){
-  const A=ACTIVES[id],lv=P.act[id],p={dmg:A.fuse?1.8:1,area:1,cd:1,count:0}; // 조합 스킬은 재료 둘을 삼킨 만큼 처음부터 강하다
+  const A=ACTIVES[id],lv=P.act[id],p={dmg:(A.fuse?1.8:1)*1.14*(SKILL_HV[id]||1),area:1,cd:1,count:0}; // 1.14: 기본 쿨타임을 늘린 만큼 한 방을 키움 // 조합 스킬은 재료 둘을 삼킨 만큼 처음부터 강하다
   for(let i=0;i<lv-1;i++){const u=A.ups[i];if(!u){p.dmg+=.12;continue;}for(const k in u[1]){if(k==='cd')p.cd*=1-u[1][k];else p[k]=(p[k]||0)+u[1][k];}}
+  p.area=softArea(p.area);if(p.big)p.big=softArea(1+p.big)-1;
   P.pk[id]=p;
 }
 const PLAIN_PERK={dmg:1,area:1,cd:1,count:1,life:1,big:1,spin:1};
@@ -442,7 +443,7 @@ function update(dt){
 
   // 스킬
   if(!P.dead&&!over)for(const id in P.act){const A=ACTIVES[id],p=P.pk[id];if(A.tick)A.tick(dt,p);
-    if(A.cd){P.cds[id]=(P.cds[id]===undefined?.4:P.cds[id])-dt;if(P.cds[id]<=0)P.cds[id]=A.fire(p)?(FX.chronos&&Math.random()<.1*FX.chronos?.25:cdOf(A.cd*p.cd)):.15;}}
+    if(A.cd){P.cds[id]=(P.cds[id]===undefined?.4:P.cds[id])-dt;if(P.cds[id]<=0)P.cds[id]=A.fire(p)?((FX.chronos&&Math.random()<.1*FX.chronos||FX.wudang&&Math.random()<.08*FX.wudang)?.25:cdOf(A.cd*(SKILL_HV[id]||1)*p.cd)):.15;}}
   if(!P.act.blade||P.dead)blades.length=0;if(!P.act.saw||P.dead)saws.length=0;
 
   // 불씨탄

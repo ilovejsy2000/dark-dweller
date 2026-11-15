@@ -29,7 +29,7 @@ const TALENTS=[
 ];
 const TAL=Object.fromEntries(TALENTS.map(t=>[t.id,t]));
 function tal(id){return(SAVE.tal&&SAVE.tal[id])||0;}
-const talCost=t=>Math.round(t.c*Math.pow(1.45,tal(t.id)));
+const talCost=t=>Math.round(t.c*2.5*Math.pow(1.55,tal(t.id))); // 11-15 대표님 "능력 업에 드는 재료를 더": 2.5배, 단계마다 1.45→1.55배
 function talentApply(s){for(const t of TALENTS){const l=tal(t.id);if(l&&t.ap)t.ap(s,l);}if(state==='play')s.hp*=RUN.php;}
 function metaRevive(){if(RUN.revive<=0)return false;RUN.revive--;P.hp=P.maxhp*.5;P.inv=2;uiBanner('불사 · 다시 일어섭니다');ring(P.x,P.y-20,20,700,'#ffe08a');flash(P.x,P.y-20,500,.5);SFX.level();
   for(const e of enemies){const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy)||1;if(d<260&&!e.boss){e.kx+=dx/d*600;e.ky+=dy/d*600;}}return true;}
@@ -54,7 +54,7 @@ function fleeAI(e,dx,dy,d,dt){
   if(e.hitT>0&&Math.random()<dt*6)gems.push({x:e.x+rand(-10,10),y:e.y+rand(-8,8),v:Math.ceil(DIFF.xp(runT/60)),t:0,pull:0}); // 맞을 때마다 보석을 흘린다
   return e.T.spd*(d<160?1.25:1);
 }
-function goblinLoot(e){for(let i=0;i<4;i++)dropItem(e.x,e.y,rollGrade(1,lootBoost()+2),i*.1);
+function goblinLoot(e){for(let i=0;i<3;i++)dropItem(e.x,e.y,rollGrade(1,lootBoost()+2),i*.1);
   for(let i=0;i<30;i++)gems.push({x:e.x+rand(-40,40),y:e.y+rand(-28,28),v:Math.ceil(3*DIFF.xp(runT/60)),t:0,pull:0});
   RUN.shardBonus+=10;uiBanner('보물 고블린 처치 · 어둠 결정 +10');SFX.loot(4);flash(e.x,e.y-20,380,.4);ring(e.x,e.y,16,520,'#ffd56a');ember(e.x,e.y-20,24,30,140,'#ffd56a');}
 
@@ -110,7 +110,7 @@ function metaKill(e){
 }
 function metaChest(){const q=RUN.quest;if(q&&q.Q.k==='chest')q.n++;}
 /* 상자: 열리면 0.9초 동안 등급 이름이 돌아가다 멈춘다(그동안 상자는 그 자리에) */
-function chestOpen(c){const n=1+(Math.random()<.4?1:0);c.gis=[];for(let i=0;i<n;i++)c.gis.push(rollGrade(1,lootBoost()+1.5));c.spin=.95;c.best=Math.max(...c.gis);SFX.ui();metaChest();}
+function chestOpen(c){const n=1+(Math.random()<.2?1:0);c.gis=[];for(let i=0;i<n;i++)c.gis.push(rollGrade(1,lootBoost()+1.5));c.spin=.95;c.best=Math.max(...c.gis);SFX.ui();metaChest();}
 function chestSpinEnd(c){c.dead=1;c.gis.forEach((g,i)=>dropItem(c.x,c.y,g,i*.08));
   for(let i=0;i<8;i++)gems.push({x:c.x+rand(-24,24),y:c.y+rand(-16,16),v:Math.ceil(2*DIFF.xp(runT/60)),t:0,pull:0});
   puff(c.x,c.y-10,6,'#ffe08a');ring(c.x,c.y,10,300,GRADES[c.best].c);flash(c.x,c.y,220+c.best*60,.3);SFX.loot(Math.max(1,c.best));uiBanner(GRADES[c.best].k+' 상자');}
@@ -143,9 +143,10 @@ function metaMinimap(mx,my){
 function metaHud(h){const q=RUN.quest,t=q?`임무 · ${q.Q.txt(q)} · ${Math.ceil(Math.max(0,q.left))}초`:'';if(h.qt!==t){h.qt=t;$('quest').textContent=t;}}
 
 /* ───── ③ 분해 · 재련 ───── */
-const DUST=[1,3,8,25,60],REF_COST=[2,5,12,30,60];
+/* 11-15 대표님 "재련에 드는 재료를 더, 분해로 얻는 재료는 더 적게": 가루 [1,3,8,25,60]→[1,2,4,10,25], 재련 [2,5,12,30,60]→[6,15,40,100,200], 굴릴 때마다 +25%→+40% */
+const DUST=[1,2,4,10,25],REF_COST=[6,15,40,100,200];
 const dustOf=it=>DUST[it.gi]*(it.prime?2:1);
-const refCost=it=>Math.round(REF_COST[it.gi]*(1+(it.rf||0)*.25));
+const refCost=it=>Math.round(REF_COST[it.gi]*(1+(it.rf||0)*.4));
 /* 한 줄을 다시 굴린다. 새 값이 더 낮으면 그대로 둔다(나빠지지 않음) */
 function refineLine(it,k){const c=refCost(it);if((SAVE.dust||0)<c)return null;SAVE.dust-=c;it.rf=(it.rf||0)+1;
   const l=it.lines.find(x=>x.k===k),[a,b]=itemRange(it,k),nv=STAT[k].dec?Math.round((a+(b-a)*Math.random())*10)/10:Math.round(a+(b-a)*Math.random()),old=l.v;
@@ -195,9 +196,9 @@ function dailyStart(){const p=dailyPlan();setMap(p.map);startRun(0);mode.t=600;m
 function metaLobbyInit(){
   const d=btn('',()=>{SFX.ui();soundOn();dailySel=true;riftSel=false;refreshLobby();},'');d.id='dailyBtn';d.append(el('b',null,'오늘의 도전'),el('i',null,''));$('dailyRow').append(d);
   $('talBtn').addEventListener('click',()=>{SFX.ui();soundOn();renderTal();show('lobby',false);show('tal',true);});
-  $('talClose').addEventListener('click',()=>{show('tal',false);recalc();refreshLobby();show('lobby',true);});
+  $('talClose').addEventListener('click',()=>{show('tal',false);recalc();refreshLobby();});
   $('cxBtn').addEventListener('click',()=>{SFX.ui();soundOn();renderCx();show('lobby',false);show('cx',true);});
-  $('cxClose').addEventListener('click',()=>{show('cx',false);show('lobby',true);});
+  $('cxClose').addEventListener('click',()=>{show('cx',false);});
 }
 function metaLobbyRefresh(){
   const p=dailyPlan(),done=SAVE.daily&&SAVE.daily.done===dayKey(),b=$('dailyBtn');b.setAttribute('aria-pressed',dailySel);b.lastChild.textContent=done?'오늘 깸 · 내일 새 도전':`${MAPS[p.map].k} · ${p.mods.map(m=>m.n).join(' · ')}`;
