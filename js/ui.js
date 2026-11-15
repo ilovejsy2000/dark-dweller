@@ -42,9 +42,15 @@ function drawSkillIcon(g,k){g.lineWidth=2.5;
   }}
 /* 스킬·패시브 그림판(img/skills.png, 한 칸 108, 6칸씩). 패시브는 'p_이름'. 그림을 못 읽으면 코드로 그린 아이콘 */
 const skAtlas=new Image();skAtlas.src='img/skills.png';
+/* 11-15 다듬은 스킬 24종의 새 아이콘(img/skillsB.png). 여기 있는 스킬은 이 그림판을 먼저 쓴다 */
+const skAtlasB=new Image();skAtlasB.src='img/skillsB.png';
+const SKB_ORDER=['slash','blade','axe','wave','golden','clone','bolt','meteor','zap','strike','spear','blizz','vine','dark','reaper','storm','legion','taiji','shower','smite','zero','harvest','miasma','sun'];
 const SK_CELL=108,SK_ORDER=['slash','bolt','zap','blade','spear','meteor','vine','axe','wave','strike','blizz','cloud','dark','drain','sfire','sice','szap','skel','reaper','clone','storm','shower','tring','frost','plasma','saw','sun','zero','smite','harvest','legion','miasma',
   'p_might','p_haste','p_keen','p_vigor','p_hide','p_ward','p_swift','p_magnet','p_learn','p_luck','p_regen','p_focus','p_reach'];
 function skillIconURL(k){
+  const j=SKB_ORDER.indexOf(k);
+  if(j>=0&&skAtlasB.complete&&skAtlasB.naturalWidth){if(urlCache['b'+k])return urlCache['b'+k];
+    try{const c=document.createElement('canvas');c.width=c.height=96;const g=c.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(skAtlasB,(j%6)*SK_CELL+5,(j/6|0)*SK_CELL+5,SK_CELL-10,SK_CELL-10,0,0,96,96);return urlCache['b'+k]=c.toDataURL();}catch(_){}}
   const i=SK_ORDER.indexOf(k);
   if(i>=0&&skAtlas.complete&&skAtlas.naturalWidth){if(urlCache['a'+k])return urlCache['a'+k];
     try{const c=document.createElement('canvas');c.width=c.height=96;const g=c.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(skAtlas,(i%6)*SK_CELL+5,(i/6|0)*SK_CELL+5,SK_CELL-10,SK_CELL-10,0,0,96,96); /* 칸 가장자리 5픽셀은 여백 */return urlCache['a'+k]=c.toDataURL();}catch(_){}}
@@ -81,22 +87,32 @@ function bestText(){const M=MAPS[mapSel],k=mapSel===0?MODES[modeSel].k:M.k+'·'+
 function refreshLobby(){const M=MAPS[mapSel];MODES.forEach((m,i)=>{const b=$('mode-'+i);b.setAttribute('aria-pressed',i===modeSel);b.textContent=m.t<0?`클리어 · ${M.clear/60}분`:m.k;});MAPS.forEach((m,i)=>$('map-'+i).setAttribute('aria-pressed',!riftSel&&!dailySel&&i===mapSel));
   $('mapDesc').textContent=M.d+(mapSel?` 적 체력 ${M.hp}배 · 공격 ${M.dmg}배, 높은 등급 장비가 더 잘 나옵니다.`:'')+(MODES[modeSel].t<0?` ${M.clear/60}분을 버티고 끝 보스를 잡으면 클리어입니다.`:'');$('best').textContent=bestText();riftLobbyRefresh();metaLobbyRefresh();}
 function uiLobby(){for(const id of['hud','result','pause','lvl','inv','tip'])show(id,false);modeSel=SAVE.m2||0;mapSel=SAVE.map||0;if(MAP!==MAPS[mapSel])setMap(mapSel);refreshLobby();show('lobby',false);hubNear=null;show('hubAct',false);hubArrive();} // 거점 = 야영지(동굴 입구에서 맵 고르기)
-function uiStart(){soundOn();if(dailySel)dailyStart();else if(riftSel&&riftOpen()){riftStartMap(riftTier);startRun(0,riftTier);}else{riftSel=false;setMap(mapSel);startRun(modeSel);}hudC={};show('bossBar',false);show('lvl',false);/* 앞 판에서 못 잡은 보스의 체력 띠가 남지 않게(11-15) */$('toasts').innerHTML='';show('lobby',false);show('result',false);show('hubTop',false);show('hubAct',false);show('hud',true);uiHud();uiNote('공격은 자동입니다. 움직이기만 하세요.');}
+function uiStart(){soundOn();hubEnter=0;if(!$('fade').classList.contains('out'))show('fade',false); // 들어오는 연출 중에 시작해도 검은 막이 남지 않게
+  if(dailySel)dailyStart();else if(riftSel&&riftOpen()){riftStartMap(riftTier);startRun(0,riftTier);}else{riftSel=false;setMap(mapSel);startRun(modeSel);}hudC={};show('bossBar',false);show('lvl',false);/* 앞 판에서 못 잡은 보스의 체력 띠가 남지 않게(11-15) */$('toasts').innerHTML='';show('lobby',false);show('result',false);show('hubTop',false);show('hubAct',false);show('hud',true);uiHud();uiNote('공격은 자동입니다. 움직이기만 하세요.');}
 
 /* ───── 레벨업 선택: 액티브 → 패시브 ───── */
 let lvStep='act',choiceAt=0;
 function uiOpenChoice(){choosing=true;joy=null;lvStep='act';renderChoice();show('lvl',true);}
+let curChoices=[];
 function renderChoice(){
-  const kind=lvStep,ids=rollChoices(kind);choiceAt=performance.now();
+  const kind=lvStep,ids=rollChoices(kind);choiceAt=performance.now();curChoices=[];
   $('lvlStep').textContent=`레벨 ${P.level-pendingLv+1} · ${kind==='act'?'1 / 2':'2 / 2'}`;$('lvlTitle').textContent=kind==='act'?'액티브 선택':'패시브 선택';
   const box=$('choices');box.innerHTML='';
   const rb=$('rerollBtn');rb.hidden=RUN.rerolls<=0;rb.textContent=`다시 굴리기 (${RUN.rerolls})`;
   for(const id of ids){const def=kind==='act'?ACTIVES[id]:PASSIVES[id],lv=(kind==='act'?P.act:P.pas)[id]||0,info=choiceInfo(kind,id),rare=canRare(kind,id)&&Math.random()<rareChance(),b=el('button','choice'+(info.fuse?' fuse':'')+(rare?' rare':''));b.type='button';b.id='ch-'+id;
     const im=el('img');im.src=skillIconURL(kind==='act'?id:'p_'+id);im.alt='';
     const head=el('div','hd');head.append(el('b',null,def.n));if(def.el)head.append(el('em','el',def.el));if(info.fuse)head.append(el('em','fz','조합'));if(info.special)head.append(el('em','sp','특수'));if(rare)head.append(el('em','rr','희귀 · 2단계'));head.append(el('em',null,lv?`${lv} → ${lv+(rare?2:1)}단계`:rare?'새로 배움 · 2단계부터':'새로 배움'));
-    const d=el('div');d.append(head,el('p',null,info.text));b.append(im,d);
+    const d=el('div');d.append(head,el('p',null,info.text));b.append(im,d);curChoices.push({id,rare,fuse:!!info.fuse});
     b.addEventListener('click',()=>{if(performance.now()-choiceAt<350)return;SFX.ui();if(info.fuse&&!lv)SFX.level();takeChoice(kind,id);if(rare){SFX.level();takeChoice(kind,id);}nextChoice();});box.append(b);}
+  const ab=$('adBtn');ab.hidden=curChoices.length<2;ab.innerHTML='';ab.append(el('b',null,'▶ 광고 보고 모두 받기'),el('small',null,`이 ${curChoices.length}개를 전부 받습니다`));
 }
+/* 광고 보고 모두 받기: 보이는 카드를 전부 받는다(조합 카드는 재료를 먼저 받은 뒤 마지막에). 패시브는 6종 한도를 넘기지 않는다 */
+function grantAll(){const kind=lvStep,list=curChoices.slice().sort((a,b)=>a.fuse-b.fuse);
+  for(const c of list){if(kind==='pas'&&!P.pas[c.id]&&Object.keys(P.pas).length>=MAX_PAS)continue;if(kind==='act'&&(P.act[c.id]||0)>=SKILL_MAX)continue;takeChoice(kind,c.id);if(c.rare&&!(kind==='act'&&(P.act[c.id]||0)>=SKILL_MAX))takeChoice(kind,c.id);}
+  SFX.level();uiNote(`${list.length}개를 모두 받았습니다`);nextChoice();}
+/* 광고 자리: 지금은 3초 동안 자리만 보여 준다. 스토어 앱에서는 이 함수 안에서 보상형 광고(애드몹 등)를 띄우고, 끝까지 보면 done() 을 부른다 */
+function showRewardAd(done){const box=$('adBox');let n=3;$('adCount').textContent=n;show('adBox',true);
+  const t=setInterval(()=>{n--;if(n>0){$('adCount').textContent=n;return;}clearInterval(t);show('adBox',false);done();},1000);}
 function nextChoice(){
   if(lvStep==='act'){lvStep='pas';renderChoice();return;}
   pendingLv--;if(pendingLv>0){lvStep='act';renderChoice();return;}
@@ -209,6 +225,7 @@ function uiInit(){
     vals.forEach((v,i)=>{const b=btn(v,()=>{CFG[k]=i;applyCfg();soundOn();SFX.ui();if(k==='vib'&&i)buzz(30);},'');b.id=`cfg-${k}-${i}`;b.dataset.k=k;b.dataset.v=i;seg.append(b);});
     row.append(seg);$('cfgRows').append(row);}
   $('goBtn').addEventListener('click',()=>{if(state==='lobby')hubDepart();else uiStart();}); // 거점에서는 동굴 밖으로 걸어 나간 뒤 시작
+  $('adBtn').addEventListener('click',()=>{if(performance.now()-choiceAt<350||!curChoices.length)return;SFX.ui();showRewardAd(grantAll);});
   $('rerollBtn').addEventListener('click',()=>{if(RUN.rerolls<=0||performance.now()-choiceAt<350)return;RUN.rerolls--;SFX.ui();renderChoice();});
   $('invBtn').addEventListener('click',()=>{soundOn();SFX.ui();uiInv('lobby');});
   $('invBtn2').addEventListener('click',()=>{SFX.ui();uiInv('pause');});

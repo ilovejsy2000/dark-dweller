@@ -2,7 +2,7 @@
 /* 다크 드웰러 — 더한 스킬(대표님 구성표 참고): 번개·냉기·독·암흑 계열, 소환물, 조합 스킬.
    game.js 의 규칙에 얹힌다: update2(판 계산), onKill2(처치할 때), onSlash2(벨 때), render2*(그리기), drawSkillIcon2(아이콘) */
 let allies=[],zones2=[],darks=[],drains=[],suns=[];
-function clear2(){allies=[];zones2=[];darks=[];drains=[];suns=[];}
+function clear2(){allies=[];zones2=[];darks=[];drains=[];suns=[];skill3Reset();}
 
 /* 계열 이름표와 구성표에 맞춘 이름 */
 const EL_OF={slash:'물리',blade:'물리',axe:'물리',bolt:'화염',meteor:'화염',zap:'번개',spear:'냉기',vine:'독',wave:'빛',storm:'물리',saw:'물리',shower:'화염',tring:'번개',frost:'냉기',plasma:'번개'};
@@ -10,9 +10,9 @@ for(const k in EL_OF)ACTIVES[k].el=EL_OF[k];
 ACTIVES.bolt.n='화염구';ACTIVES.meteor.n='화염 낙하';ACTIVES.axe.n='도끼 투척';
 
 /* ───── 공용 동작 ───── */
-function strikeAt(x,y,R,dmg,stun,heavy){
+function strikeAt(x,y,R,dmg,stun,heavy,gold){ // gold: 제우스의 천뇌(금빛 벼락)
   for(const e of enemies){if(e.dead)continue;const dx=e.x-x,dy=e.y-y,d=Math.hypot(dx,dy);if(d<R+e.r){if(stun)e.stun=Math.max(e.stun,.5);hitEnemy(e,dmg,dx/(d||1),dy/(d||1),160,'zap',false,heavy);}}
-  const z=makeZap([[x+rand(-40,40),y-520],[x+rand(-18,18),y-260],[x,y]]);z.life=z.max=.2;zaps.push(z);flash(x,y,R*2.6,.18);ring(x,y,10,R*4,'#bfe9ff');if(can('strike',90))SFX.zap();
+  const z=makeZap([[x+rand(-40,40),y-520],[x+rand(-18,18),y-260],[x,y]]);z.life=z.max=.2;if(gold){z.gold=1;pillar(x,y,260,22,'#ffe08a');}zaps.push(z);flash(x,y,R*2.6,.18);ring(x,y,10,R*4,gold?'#ffe08a':'#bfe9ff');if(can('strike',90))SFX.zap();
 }
 function slashAt(x,y,a,R,dmg,heavy){
   slashes.push({x,y:y-20,a,R,life:.22,max:.22});
@@ -42,7 +42,7 @@ Object.assign(ACTIVES,{
   strike:{n:'낙뢰',el:'번개',d:'무작위 적의 머리 위로 벼락을 떨어뜨립니다.',cd:2.4,
     ups:[['+1줄기',{count:1}],['감전: 맞은 적이 0.5초 멈춥니다',{stun:1}],['피해 +25%',{dmg:.25}],['+1줄기',{count:1}],['범위 +25%',{area:.25}],['쿨타임 -20%',{cd:.2}],['+2줄기',{count:2}],['피해 +30%',{dmg:.3}]],
     fire(p){const near=enemies.filter(e=>!e.dead&&Math.hypot(e.x-P.x,e.y-P.y)<480);if(!near.length)return false;
-      for(let i=0;i<1+p.count;i++){const t=pick(near),x=t.x,y=t.y;later(i*.09,()=>strikeAt(x,y,58*p.area*AREA,38*p.dmg,p.stun));}return true;}},
+      for(let i=0;i<1+p.count;i++){const t=pick(near),x=t.x,y=t.y;later(i*.09,()=>strikeAt(x,y,58*p.area*AREA,38*p.dmg,p.stun,false,true));}return true;}},
   blizz:{n:'눈보라',el:'냉기',d:'적이 몰린 곳에 눈보라를 일으켜 느리게 만들고 계속 피해를 줍니다.',cd:6,
     ups:[['빙결: 처음 닿은 적이 1초 얼어붙습니다',{freeze:1}],['범위 +20%',{area:.2}],['피해 +25%',{dmg:.25}],['지속 +2초',{life:2}],['+1곳',{count:1}],['피해 +30%',{dmg:.3}],['범위 +20%',{area:.2}],['쿨타임 -20%',{cd:.2}]],
     fire(p){const t=nearest(P.x,P.y,380);if(!t)return false;const used=new Set([t]),life=4+(p.life||0);
@@ -129,7 +129,7 @@ function allyTick(a,dt){
     if(t&&a.t<=0&&Math.hypot(t.x-a.x,t.y-a.y)<90){a.t=2.6/(1+(p.spin||0));a.sw=.3;reap(a.x,a.y,86*p.area*AREA,60*p.dmg,.2+(p.exec||0));}
   }else{ // 그림자 분신: 주인을 따라다닌다. 조합(무한의 분신)을 배우면 스스로 회전 베기
     const an=a.slot*2.2+1,tx=P.x+Math.cos(an)*54,ty=P.y+Math.sin(an)*36;a.x+=(tx-a.x)*Math.min(1,dt*6);a.y+=(ty-a.y)*Math.min(1,dt*6);a.dir=P.dir;
-    if(P.act.legion&&a.t<=0){a.t=1.6;a.sw=.25;spinAt(a.x,a.y,92*AREA,22*P.pk.legion.dmg);}
+    if(P.act.legion&&a.t<=0){a.t=1.6;a.sw=.25;spinAt(a.x,a.y,92*AREA,22*P.pk.legion.dmg);const t=nearest(a.x,a.y,420);if(t){const an=Math.atan2(t.y-a.y,t.x-a.x);axes.push({x:a.x,y:a.y-22,vx:Math.cos(an)*560,vy:Math.sin(an)*560,t:0,hv:0,size:.8,dmg:16*P.pk.legion.dmg,hit:new Map()});}} // 분광검영: 회전 베기 + 비도
   }
 }
 function update2(dt,over){
@@ -146,7 +146,7 @@ function update2(dt,over){
   for(const o of darks){o.life-=dt;o.t+=dt;o.x+=o.vx*dt;o.y+=o.vy*dt;
     for(const e of enemies){if(e.dead)continue;const dx=e.x-o.x,dy=e.y-e.r*.6-o.y,d=Math.hypot(dx,dy)||1;
       if(o.pull&&d<110&&d>12){e.kx-=dx/d*520*dt*e.T.kb;e.ky-=dy/d*520*dt*e.T.kb;}
-      if(d<e.r+o.r&&(o.hit.get(e)||-1)<o.t-.45){o.hit.set(e,o.t);hitEnemy(e,o.dmg,o.vx/230,o.vy/230,90,'thud');}}
+      if(d<e.r+o.r&&(o.hit.get(e)||-1)<o.t-.45){o.hit.set(e,o.t);hitEnemy(e,o.dmg,o.vx/230,o.vy/230,90,'thud');if(o.leech&&!P.dead&&can('lch',60)){P.hp=Math.min(P.maxhp,P.hp+P.maxhp*.002*o.leech);ember(e.x,e.y-e.r,1,4,60,'#e56bff');}}}
     if(o.life<=0&&o.burst){for(const e of enemies){if(e.dead)continue;const dx=e.x-o.x,dy=e.y-e.r*.6-o.y,d=Math.hypot(dx,dy);if(d<90*AREA+e.r)hitEnemy(e,o.dmg*1.5,dx/(d||1),dy/(d||1),240,'thud');}
       starFx(o.x,o.y,40,'#e56bff');ring(o.x,o.y,10,360,'#b678ff');flash(o.x,o.y,200,.2);if(can('boom',70))SFXH.thud();}}
   darks=darks.filter(o=>o.life>0);

@@ -23,7 +23,7 @@ function relicRecalc(s,fx){
   if(setHas('athena',2))add('guard',1);if(setHas('athena',3))s.mres+=20;if(setHas('athena',4))add('aegis',1);
   if(setHas('surtr',2))el({fire:.25},1);if(setHas('surtr',3))s.area+=15;if(setHas('surtr',4))add('surtrSet',1);
   if(setHas('poseidon',2))el({ice:.25},1);if(setHas('poseidon',3))add('chillDmg',1);if(setHas('poseidon',4))fx.iceBurst+=1;
-  if(fx.gungnir)add('spearTwin',2*fx.gungnir);if(fx.mjolnir)add('axePlus',2*fx.mjolnir);
+  if(fx.gungnir)add('spearTwin',2*fx.gungnir);if(fx.mjolnir)add('zapChain',fx.mjolnir);
   if(fx.keenEye)s.crit+=8*fx.keenEye;if(fx.swift)s.move+=15*fx.swift;if(fx.dodge2)s.move+=15*fx.dodge2;if(fx.atlas)s.move-=10*fx.atlas;
   wuxRecalc(s,fx);
   if(fx.regenPlus)s.regen+=1.5*fx.regenPlus;if(fx.chronos)s.cdr+=25*fx.chronos;
@@ -61,7 +61,7 @@ function relicOnKill(e){
 }
 /* true 면 이번 피해를 막는다: 회피·되돌림·보호막 */
 function relicBlock(){
-  if(wuxBlock())return true;
+  if(goldBlock()||wuxBlock())return true;
   const dodge=Math.min(.6,.15*(FX.dodge||0)+.25*(FX.dodge2||0)+.25*(FX.rewind||0));
   if(dodge&&Math.random()<dodge){textFx(P.x,P.y-66,FX.rewind?'되돌림':'회피');P.inv=.3;return true;}
   if(FX.aegis&&aegisT<=0){aegisT=12/FX.aegis;textFx(P.x,P.y-66,'보호막','#ffe08a');P.inv=.5;ring(P.x,P.y-20,20,520,'#ffe08a');flash(P.x,P.y-20,260,.25);SFX.wave();

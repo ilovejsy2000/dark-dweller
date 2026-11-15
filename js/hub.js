@@ -32,7 +32,7 @@ function hubUpdate(dt){
   if(hubEnter>0){hubEnter-=dt;P.move=true;P.y-=110*dt;P.dir=1;fadeTo(Math.max(0,hubEnter/.9));if(hubEnter<=0){fadeTo(0);P.move=false;}show('hubTop',false);show('hubAct',false);return;}
   /* 나가는 연출: 출구로 걸어가며 어두워진 뒤 맵으로 */
   if(hubExit){const h=hubExit;h.t+=dt;const tx=0,ty=470,dx=tx-P.x,dy=ty-P.y,d=Math.hypot(dx,dy)||1;P.move=true;P.x+=dx/d*Math.min(d,200*dt);P.y+=dy/d*Math.min(d,200*dt);if(Math.abs(dx)>4)P.dir=dx>0?1:-1;
-    fadeTo(clamp((h.t-.55)/.65,0,1),'동굴 밖으로');if(h.t>=1.35){hubExit=null;uiStart();fadeOut();}return;}
+    fadeTo(clamp((h.t-.55)/.65,0,1),'동굴 밖으로');if(h.t>=1.35){hubExit=null;fadeOut();uiStart();}return;}
   const free=hubFree();show('hubTop',free);
   if(!free){show('hubAct',false);return;}
   hubTopRefresh();

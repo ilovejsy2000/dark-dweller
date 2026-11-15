@@ -201,11 +201,11 @@ const fusedCount=()=>Object.keys(P.act).filter(k=>ACTIVES[k].fuse).length;
 /* 조합 조건: 재료 둘 다 FUSE_LV 단계 + 주인공 FUSE_PLV 레벨 + 한 판에 FUSE_MAX 개까지 */
 const fusionReady=id=>{const A=ACTIVES[id];return !!A.fuse&&!P.act[id]&&P.level>=FUSE_PLV&&fusedCount()<FUSE_MAX&&A.fuse.every(k=>(P.act[k]||0)>=FUSE_LV);};
 function rollChoices(kind){
-  const n=Math.min(7,choiceCount(ST.luck)+(FX.wisdom||0)+tal('choice')+RUN.choice+(P.level<=EARLY_CHOICE_LV?1:0)),mix=a=>a.slice().sort(()=>Math.random()-.5);
+  const n=Math.min(4,choiceCount(ST.luck)+(FX.wisdom||0)+tal('choice')+RUN.choice),mix=a=>a.slice().sort(()=>Math.random()-.5); // 11-15 대표님: 3개, 행운에 따라 4개, 최대 4개
   if(kind==='pas'){const own=Object.keys(P.pas);return mix(own.length>=MAX_PAS?own:Object.keys(PASSIVES)).slice(0,n);}
   /* 액티브: 조합 스킬은 재료가 갖춰졌을 때만 나오고(맨 위에 한 장 더), 배운 뒤에는 다른 스킬처럼 섞여 나온다 */
   const ready=Object.keys(ACTIVES).filter(fusionReady),all=Object.keys(ACTIVES).filter(id=>!ACTIVES[id].fuse||P.act[id]),open=all.filter(id=>(P.act[id]||0)<SKILL_MAX),pool=open.length?open:all; // 스킬은 SKILL_MAX 단계까지
-  return (ready.length?[pick(ready)]:[]).concat(mix(pool).slice(0,n));
+  return (ready.length?[pick(ready)]:[]).concat(mix(pool).slice(0,ready.length?n-1:n));
 }
 function takeChoice(kind,id){
   if(kind==='act'){const A=ACTIVES[id],fresh=!P.act[id];P.act[id]=(P.act[id]||0)+1;calcPerks(id);
@@ -252,7 +252,7 @@ function makeZap(pts){
       if(Math.random()<.22){const an=Math.random()*TAU,l=rand(16,34);br.push([q,[q[0]+Math.cos(an)*l*.5+rand(-5,5),q[1]+Math.sin(an)*l*.5+rand(-5,5)],[q[0]+Math.cos(an)*l,q[1]+Math.sin(an)*l]]);}}}
   segs.push(pts[pts.length-1]);return{segs,br,life:.18,max:.18};
 }
-function thunder(x,y,dmg){
+function thunder(x,y,dmg){hammerAt(x,y,1); // 묠니르
   const R=95*AREA;for(const e of enemies){if(e.dead)continue;const dx=e.x-x,dy=e.y-y,d=Math.hypot(dx,dy);if(d<R+e.r)hitEnemy(e,dmg,dx/(d||1),dy/(d||1),220,'zap');}
   const z=makeZap([[x+rand(-50,50),y-560],[x+rand(-24,24),y-300],[x,y]]);z.life=z.max=.26;z.big=1;zaps.push(z);
   flash(x,y,320,.3);ring(x,y,16,520,'#bfe9ff');pillar(x,y,300,26,'#9fd8ff');shake(.12);SFX.thunder();
@@ -500,13 +500,13 @@ function update(dt){
   zones=zones.filter(z=>z.life>0);
   // 빛의 파동
   for(const w of waves){w.r+=560*dt;
-    for(const e of enemies){if(e.dead||w.hit.has(e))continue;const dx=e.x-w.x,dy=e.y-w.y,d=Math.hypot(dx,dy)||1;if(d<w.r+e.r){w.hit.add(e);if(w.stun)e.stun=Math.max(e.stun,.8);
+    for(const e of enemies){if(e.dead||w.hit.has(e))continue;const dx=e.x-w.x,dy=e.y-w.y,d=Math.hypot(dx,dy)||1;if(d<w.r+e.r){w.hit.add(e);if(w.stun)e.stun=Math.max(e.stun,.8);if(!w.zap)e.slow=Math.max(e.slow,1);
       if(w.zap&&w.bolts>0){w.bolts--;zaps.push(makeZap([[e.x+rand(-40,40),e.y-420],[e.x+rand(-14,14),e.y-200],[e.x,e.y-e.r]]));flash(e.x,e.y-10,120,.12);}
       hitEnemy(e,w.dmg,dx/d,dy/d,w.zap?260:560,w.zap?'zap':'light',false,!!w.zap);}}
     for(const s of eshots){if(Math.hypot(s.x-w.x,s.y-w.y)<w.r){s.life=0;ember(s.x,s.y,2,4,30,'#e56bff');}}}
   waves=waves.filter(w=>w.r<w.R);
 
-  update2(dt,over);updateWorld(dt);mobsUpdate(dt);relicTick(dt);
+  update2(dt,over);skill3Update(dt);updateWorld(dt);mobsUpdate(dt);relicTick(dt);
 
   // 경험치·장비 줍기
   xpComboT-=dt;if(xpComboT<=0)xpCombo=0;const pr=110*(1+ST.pick/100);

@@ -18,9 +18,9 @@ function drawHero(g,o){
 
 /* 스킬 그림 */
 const sprBlade=makeSprite(24,60,12,30,g=>{poly(g,[[-4,10],[-4,-16],[0,-27],[4,-16],[4,10]]);inkF(g,'#f3e6c8',2.6);g.fillStyle='#bff3ff';poly(g,[[-1.2,8],[-1.2,-15],[0,-22],[1.2,-15],[1.2,8]]);g.fill();rr(g,-8,10,16,4,2);inkF(g,'#b08845',2.4);rr(g,-2.2,14,4.4,11,2);inkF(g,'#6b4630',2.4);});
-const sprAxe=makeSprite(48,48,24,24,g=>{rr(g,-2.2,-17,4.4,35,2);inkF(g,'#7d5238',2.4);
-  g.beginPath();g.moveTo(2,-16);g.quadraticCurveTo(19,-19,18,-2);g.quadraticCurveTo(10,-7,2,-4);g.closePath();inkF(g,'#aab4c8',2.6);
-  g.beginPath();g.moveTo(-2,-16);g.quadraticCurveTo(-15,-17,-14,-5);g.quadraticCurveTo(-8,-8,-2,-6);g.closePath();inkF(g,'#8a94ac',2.6);});
+/* 천수비도: 날 + 짧은 손잡이 + 붉은 술 */
+const sprAxe=makeSprite(48,56,24,24,g=>{poly(g,[[0,-20],[4.5,-6],[2.8,8],[-2.8,8],[-4.5,-6]]);inkF(g,'#dfe6f5',2.4);g.fillStyle='#ffffff';poly(g,[[0,-16],[1.5,-6],[0,4],[-1.5,-6]]);g.fill();
+  rr(g,-6.5,8,13,3.6,1.5);inkF(g,'#b08845',2.2);rr(g,-2,11.5,4,8,1.5);inkF(g,'#6b4630',2.2);g.lineWidth=3;g.strokeStyle='#e0524f';g.beginPath();g.moveTo(0,19.5);g.quadraticCurveTo(6,24,2,29);g.stroke();});
 const sprMeteor=makeSprite(64,64,32,32,g=>{blob(g,[[-17,-6],[-8,-19],[8,-18],[19,-4],[15,13],[-2,19],[-16,10]]);inkF(g,'#6e7392',3.2);g.fillStyle='#ff8a2e';ell(g,-3,-2,5,4);g.fill();ell(g,7,7,3.5,3);g.fill();});
 const sprSaw=makeSprite(76,76,38,38,g=>{starPath(g,0,0,12,32,24,0);inkF(g,'#c9d1e0',3);ell(g,0,0,18,18);inkF(g,'#8a94ac',2.6);ell(g,0,0,6,6);g.fillStyle=INK;g.fill();g.lineWidth=2;g.strokeStyle='#e9f0ff';g.beginPath();g.arc(0,0,13,-2.2,-.9);g.stroke();});
 function blitR(sp,x,y,rot,sc){ctx.save();ctx.translate(x,y);ctx.rotate(rot);if(sc)ctx.scale(sc,sc);ctx.drawImage(sp.c,-sp.ox,-sp.oy,sp.w,sp.h);ctx.restore();}
@@ -82,7 +82,7 @@ function render(dt){
     else{ctx.globalAlpha=a*.3;ctx.fillStyle='#ff7a2f';ell(ctx,z.x,z.y,R2,R2*.66);ctx.fill();ctx.globalAlpha=a;
       for(let i=0;i<7;i++){const an=r()*TAU,d=Math.sqrt(r())*R2*.8;drawFlame(ctx,z.x+Math.cos(an)*d,z.y+Math.sin(an)*d*.66,clock+i*.7,.42);}
       lights.push([z.x,z.y-10,R2*1.7,.75*a]);}}
-  ctx.globalAlpha=1;render2ground();
+  ctx.globalAlpha=1;render2ground();skill3Ground();
   // 위험 자리: 운석, 내려찍기, 폭탄 버섯
   for(const mt of meteors){const q=1-mt.t/mt.max;ctx.fillStyle='rgba(255,120,40,.13)';ell(ctx,mt.x,mt.y,mt.R,mt.R*.62);ctx.fill();
     ctx.lineWidth=3;ctx.strokeStyle=`rgba(255,150,60,${.5+.4*Math.sin(clock*20)})`;ctx.stroke();ctx.fillStyle='rgba(255,150,60,.22)';ell(ctx,mt.x,mt.y,mt.R*q,mt.R*.62*q);ctx.fill();}
@@ -126,6 +126,7 @@ function render(dt){
   for(const s of shots){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.a);
     if(s.k==='spear'){ctx.lineWidth=5;ctx.strokeStyle='rgba(191,233,255,.35)';ctx.beginPath();ctx.moveTo(-58,0);ctx.lineTo(-22,0);ctx.stroke();
       poly(ctx,[[24,0],[5,-6],[-20,-3.2],[-27,0],[-20,3.2],[5,6]]);inkF(ctx,'#bfe9ff',2.8);poly(ctx,[[17,0],[5,-2.6],[-12,0],[5,2.6]]);ctx.fillStyle='#f4fcff';ctx.fill();}
+    else if(s.k==='jian'){ctx.lineWidth=7;ctx.strokeStyle='rgba(127,227,255,.4)';ctx.beginPath();ctx.moveTo(-70,0);ctx.lineTo(-12,0);ctx.stroke();ctx.rotate(Math.PI/2);ctx.drawImage(sprBlade.c,-sprBlade.ox*1.25,-sprBlade.oy*1.25,sprBlade.w*1.25,sprBlade.h*1.25);} // 이기어검: 날아가는 검
     else{const rr0=s.r;ctx.globalAlpha=Math.min(1,s.life*4);ctx.beginPath();ctx.arc(-rr0*.6,0,rr0,-1.1,1.1);ctx.arc(-rr0*.95,0,rr0*1.05,.85,-.85,true);ctx.closePath();inkF(ctx,'#fff6dc',3);ctx.globalAlpha=1;}
     ctx.restore();lights.push([s.x,s.y,70,.6]);}
   // 베기 자국
@@ -144,10 +145,11 @@ function render(dt){
   for(const mt of meteors){if(mt.t>.75)continue;const hgt=mt.t/.75*560,x=mt.x+hgt*.25,y=mt.y-hgt,ux=.243,uy=-.97;
     poly(ctx,[[x-14,y+3],[x+ux*96,y+uy*96],[x+14,y-6]]);inkF(ctx,'#ff7a2f',3);poly(ctx,[[x-7,y+1],[x+ux*60,y+uy*60],[x+7,y-4]]);ctx.fillStyle='#ffe08a';ctx.fill();
     blitR(sprMeteor,x,y,clock*6,1.1);lights.push([x,y,130,.85]);if(dt>0&&Math.random()<.6)ember(x,y-6,1,8,30);}
-  render2fx();renderWorldFx();renderRelic();metaFx();
+  render2fx();renderWorldFx();renderRelic();metaFx();skill3Fx();
   // 번개 먹선·파동 먹선
   for(const z of zaps){ctx.lineWidth=z.big?13:9;ctx.strokeStyle=INK;strokeZap(z);}
-  for(const w of waves){const a=1-w.r/w.R;ctx.globalAlpha=Math.min(1,a*2.5);
+  for(const w of waves){const a=1-w.r/w.R;if(!w.zap)taijiDisc(w.x,w.y,w.r*.92,w.r*.006+clock*2,.62*Math.sqrt(a)); // 태극권
+    ctx.globalAlpha=Math.min(1,a*2.5);
     for(const[k,lw]of[[1,11],[.78,7]]){ctx.lineWidth=lw;ctx.strokeStyle=INK;ctx.beginPath();ctx.ellipse(w.x,w.y,w.r*k,w.r*k*.66,0,0,TAU);ctx.stroke();ctx.lineWidth=lw*.5;ctx.strokeStyle=w.zap?(k===1?'#f4fcff':'#9fd8ff'):(k===1?'#fff1c2':'#ffd27a');ctx.stroke();}
     ctx.lineWidth=3;ctx.strokeStyle=w.zap?'#bfe9ff':'#fff1c2';ctx.beginPath();for(let i=0;i<14;i++){const an=i*TAU/14+w.r*.004,c=Math.cos(an),s2=Math.sin(an)*.66;ctx.moveTo(w.x+c*(w.r+6),w.y+s2*(w.r+6));ctx.lineTo(w.x+c*(w.r+22),w.y+s2*(w.r+22));}ctx.stroke();
     lights.push([w.x,w.y,w.r*1.25,.55*a+.2]);}
@@ -175,7 +177,7 @@ function render(dt){
   for(const s of storms)for(const[x,y]of s.pts)glow(x,y,30,'rgb(150,225,255)',.4*(1-s.t/s.life));
   for(const s of saws)glow(s.x,s.y,44,'rgb(200,215,255)',.32);
   for(const o of orbs)glow(o.x,o.y,60,'rgb(120,130,255)',.7);
-  render2glow();renderWorldGlow();gimGlow();metaGlow();hubGlow();
+  render2glow();renderWorldGlow();gimGlow();metaGlow();hubGlow();skill3Glow();
   for(const a of axes)glow(a.x,a.y,30*a.size,'rgb(200,215,255)',.3);
   for(const mt of meteors){if(mt.t>.75)continue;const hgt=mt.t/.75*560;glow(mt.x+hgt*.25,mt.y-hgt,70,'rgb(255,140,50)',.7);}
   for(const z of zones)if(z.k==='fire')glow(z.x,z.y-8,z.R*1.2,'rgb(255,120,40)',.3*Math.min(1,z.life*1.5));
@@ -189,10 +191,10 @@ function render(dt){
     ctx.fillStyle=G.c+'55';ell(ctx,d.x,d.y+2,20+gi*5,7+gi*1.6);ctx.fill();
     if(dt>0&&Math.random()<.25)addP({k:'ember',x:d.x+rand(-10,10),y:d.y-rand(0,h*.7),vx:0,vy:-30,size:rand(1.2,2.4),life:.6,max:.6,col:G.c});}
   // 번개·파동 빛
-  for(const z of zaps){ctx.globalAlpha=z.life/z.max;ctx.lineWidth=z.big?22:13;ctx.strokeStyle='rgba(90,190,255,.5)';strokeZap(z);}
+  for(const z of zaps){ctx.globalAlpha=z.life/z.max;ctx.lineWidth=z.big?22:13;ctx.strokeStyle=z.gold?'rgba(255,205,80,.6)':'rgba(90,190,255,.5)';strokeZap(z);}
   for(const w of waves){ctx.globalAlpha=(1-w.r/w.R)*.6;ctx.lineWidth=16;ctx.strokeStyle=w.zap?'rgba(90,190,255,.55)':'rgba(255,210,120,.5)';ctx.beginPath();ctx.ellipse(w.x,w.y,w.r,w.r*.66,0,0,TAU);ctx.stroke();}
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
-  for(const z of zaps){ctx.lineWidth=z.big?6:4;ctx.strokeStyle='#f4fcff';strokeZap(z);}
+  for(const z of zaps){ctx.lineWidth=z.big?6:4;ctx.strokeStyle=z.gold?'#fff6c2':'#f4fcff';strokeZap(z);}
   // 타격 별·고리·숫자 (어둠 위에 또렷하게)
   for(const p of parts){if(p.k==='star'){const q=1-p.life/p.max;starPath(ctx,p.x,p.y,p.n,p.size*(.8+.5*q),p.size*.36,p.rot);if(p.size>18)inkF(ctx,p.col,p.size>40?3:2.2);else{ctx.globalAlpha=.85;ctx.fillStyle=p.col;ctx.fill();ctx.globalAlpha=1;}}
     else if(p.k==='ring'){const a=p.life/p.max;ctx.globalAlpha=a;ctx.beginPath();ctx.ellipse(p.x,p.y,p.r,p.r*.62,0,0,TAU);ctx.lineWidth=5*a+1.5;ctx.strokeStyle=INK;ctx.stroke();ctx.lineWidth=3*a+.5;ctx.strokeStyle=p.col;ctx.stroke();ctx.globalAlpha=1;}}

@@ -372,6 +372,10 @@ h2{font-size:28px}
 .cell.sel{outline:3px solid var(--yel);outline-offset:-1px}.cell.sel::after{content:'✓';background:var(--yel);color:var(--ink);font:900 10px/11px var(--font-body);text-align:center}
 .cell{-webkit-touch-callout:none;touch-action:manipulation}
 #bulk.selbar{position:sticky;bottom:0;z-index:2;background:var(--panel-1);border:3px solid var(--ink);border-radius:16px;padding:8px;box-shadow:0 4px 0 rgba(8,10,26,.6)}#bulk.selbar span{color:#fff;font:15px var(--font-display)}
+#adBtn{display:grid;gap:2px;width:100%;cursor:pointer;color:#fff;border:3px solid var(--ink);border-radius:16px;padding:9px 10px;background:#34c47c;box-shadow:0 4px 0 var(--ink),inset 0 -4px 0 #23965c,inset 0 2px 0 rgba(255,255,255,.3)}
+#adBtn b{font:19px var(--font-display);text-shadow:var(--outline)}#adBtn small{font-size:12px;font-weight:700;opacity:.92}#adBtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink),inset 0 -2px 0 #23965c}
+#adBox{z-index:9;background:rgba(5,6,15,.92)}.adcard{max-width:320px}.adslot{display:grid;place-items:center;height:220px;border:3px dashed #4a5590;border-radius:16px;font:20px var(--font-display);color:#aeb6d9}.adslot small{font:12px var(--font-body);color:#8c95c4}
+#adCount{font:44px var(--font-display)}
 #hubTop{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:12px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));pointer-events:none;z-index:2}
 #hubTop .hres{display:grid;gap:3px}#hubTop .hres b{font:26px var(--font-display)}#hubTop .hres span{font:13px var(--font-display);color:#fff;text-shadow:var(--outline)}
 #hubTop .hbtns{display:flex;gap:6px;pointer-events:auto}#hubTop .ghost{padding:6px 12px;font-size:14px}
@@ -429,6 +433,8 @@ h2{font-size:28px}
     </div>
   </div>
 
+  <div id="adBox" class="overlay" hidden><div class="card adcard"><div class="eyebrow">광고</div><div class="adslot">광고 자리<br><small>스토어 출시 때 실제 광고가 들어갑니다</small></div><b id="adCount" class="gold">3</b></div></div>
+
   <div id="pact" class="overlay" hidden>
     <div class="card">
       <div class="eyebrow">갈림길 제단</div>
@@ -463,6 +469,7 @@ h2{font-size:28px}
       <h2 id="lvlTitle" class="gold"></h2>
       <div id="choices"></div>
       <div class="btns"><button class="ghost" id="rerollBtn" type="button" hidden>다시 굴리기</button></div>
+      <button id="adBtn" type="button" hidden></button>
     </div>
   </div>
 
@@ -530,6 +537,7 @@ h2{font-size:28px}
 <script src="js/wuxia.js"></script>
 <script src="js/game.js"></script>
 <script src="js/skills2.js"></script>
+<script src="js/skills3.js"></script>
 <script src="js/relics.js"></script>
 <script src="js/mobs.js"></script>
 <script src="js/world.js"></script>
@@ -542,5 +550,5 @@ h2{font-size:28px}
 <script src="js/hub.js"></script>
 <script src="js/main.js"></script>
 
-<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611150848';</script>
+<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611151002';</script>
 </html>
