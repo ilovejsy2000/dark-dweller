@@ -548,6 +548,14 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 #note,#tut,#hubHint{border:1px solid rgba(69,240,218,.22)}
 .tfinger{background:var(--teal1);border:2px solid rgba(255,255,255,.8);box-shadow:0 0 14px var(--teal1)}
 #fade b{color:#e6fbff}
+/* 11-16 대표님 "맨 위 카메라(펀치 홀)에 가려 안 보인다": 폰(손가락 화면)에서는 위쪽 정보를 카메라 자리만큼 내린다 */
+:root{--topsafe:env(safe-area-inset-top,0px)}
+@media (pointer:coarse){:root{--topsafe:max(env(safe-area-inset-top,0px),28px)}}
+#hud{padding-top:calc(var(--topsafe) + 10px)}
+#hubTop{padding-top:calc(var(--topsafe) + 12px)}
+.overlay.full>*:first-child{margin-top:var(--topsafe)}
+#hubTop .hres{min-width:0}#hubTop .hres b{white-space:nowrap;font-size:clamp(18px,5.4vw,26px)}#hubTop .hres span{white-space:nowrap;font-size:12px}
+#hubTop .hbtns{flex:none;gap:5px}#hubTop .ghost{padding:6px 9px;font-size:13px}
 /* 11-16 순위 창 */
 .rankcard{max-width:420px}
 .rkjoin{display:flex;gap:8px}.rkjoin input{flex:1;min-width:0;font:700 15px var(--font-body);color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:9px 12px;outline:none}.rkjoin input:focus{border-color:var(--teal1);box-shadow:0 0 0 3px rgba(69,240,218,.18)}
@@ -792,5 +800,5 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 <script src="js/music.js"></script>
 <script src="js/main.js"></script>
 
-<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160414';</script>
+<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160434';</script>
 </html>
