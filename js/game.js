@@ -63,7 +63,7 @@ function recalc(){
 let state='lobby',clock=0,runT=0,trauma=0,freeze=0,kills=0,spawnAcc=0,nextBoss=BOSS_EVERY,nextElite=ELITE_FROM,nextHorde=HORDE_FROM,nextBurn=BURN_FROM,hordeT=0,burnT=0,miniDone=false,lastBoss=null,bossSince=0,
   xpCombo=0,xpComboT=0,pendingLv=0,choosing=false,ending=null,bossRef=null,cine=null,bossMood=0,mode=MODES[0],MAP=MAPS[0],fullT=0;
 /* 맵 고르기: 땅 색을 바꾸고 그려 둔 땅 조각을 버린다 */
-function setMap(i){MAP=MAPS[i]||MAPS[0];SAVE.map=MAPS.indexOf(MAP);Object.assign(MAPC,MAP.pal);chunks.clear();}
+function setMap(i){MAP=MAPS[i]||MAPS[0];SAVE.map=MAPS.indexOf(MAP);Object.assign(MAPC,MAP.pal);chunks.clear();propMap.clear();}
 const bestKey=()=>RUN.daily?'오늘의 도전':MAP.rift?'굴레':MAP===MAPS[0]?mode.k:MAP.k+'·'+mode.k;
 const curFloor=()=>Math.min(.8,rollFloor(runT/60)+MAP.floor);
 const cam={x:0,y:-20},kick={x:0,y:0};
@@ -74,7 +74,7 @@ function startRun(mi,rt){
   rift=null;RUN=runInit();if(rt)mode={k:'굴레',t:0};else{mode=Object.assign({},MODES[mi]);if(mode.t<0)mode.t=MAP.clear;SAVE.m2=mi;}clearWorld();runLoot=[];
   runT=0;trauma=0;freeze=0;kills=0;spawnAcc=0;nextBoss=BOSS_EVERY;nextElite=ELITE_FROM;nextHorde=HORDE_FROM;nextBurn=BURN_FROM;hordeT=0;burnT=0;miniDone=false;lastBoss=null;bossSince=0;pendingLv=0;choosing=false;ending=null;bossRef=null;cine=null;fullT=0;
   Object.assign(P,{x:-52,y:30,dir:1,move:false,inv:0,dead:false,level:1,xp:0,need:needXp(1),swing:-1,act:{slash:1},pas:{},pk:{},cds:{},bladeA:0});
-  state='play';relicReset();recalc();calcPerks('slash');P.hp=P.maxhp;cam.x=P.x;cam.y=P.y-20;initWorld();if(rt)riftBegin(rt);
+  state='play';relicReset();recalc();calcPerks('slash');P.hp=P.maxhp;cam.x=P.x;cam.y=P.y-20;initWorld();if(rt)riftBegin(rt);else newbieEase();
 }
 function toLobby(){state='lobby';clearWorld();ending=null;bossRef=null;cine=null;burnT=0;hordeT=0;Object.assign(P,{x:-52,y:30,dir:1,move:false,dead:false,swing:-1,inv:0});recalc();}
 const viewRad=()=>Math.hypot(W,H)/(2*S);
@@ -151,7 +151,7 @@ function killEnemy(e){
   onKill2(e);relicOnKill(e);if(e.guard)guardLoot(e);if(rift)riftKill(e);metaKill(e);
   if(T.split&&enemies.length<400)for(let i=0;i<3;i++){const a=i*TAU/3;spawn(T.split,{at:[e.x+Math.cos(a)*22,e.y+Math.sin(a)*16]});} // 분홍 젤리: 꼬마 젤리 셋으로 갈라짐
   if(big){buzz(e.boss?80:40);shake(e.boss?.9:.5);freeze=Math.max(freeze,e.boss?.25:.1);flash(e.x,e.y-40,420,.4);SFX.boom();
-    const cnt=e.guard?0:e.boss?1:(Math.random()<.6?1:0); // 11-15 대표님 "아이템 나오는 양을 줄여": 보스 2→1, 정예 1→60%for(let i=0;i<cnt;i++)dropItem(e.x,e.y,rollGrade(e.boss?2:1,lootBoost()+(e.boss?1.5:.5)),i*.09);
+    const cnt=e.guard?0:e.boss?1:(RUN.newbie||Math.random()<.6?1:0); /* 11-15 대표님 "아이템 나오는 양을 줄여": 보스 2→1, 정예 1→60% */for(let i=0;i<cnt;i++)dropItem(e.x,e.y,rollGrade(e.boss?2:1,lootBoost()+(e.boss?1.5:.5)),i*.09);
     if(e.boss===2)winRun();
   }else{SFX.kill();if(can('kp',70))shake(.035);if(Math.random()<(e.champ?.06:T.loot||.007)*(1+ST.luck/100)*(burnT>0?2:1)*(1+.3*(FX.golden||0)))dropItem(e.x,e.y,rollGrade(e.champ?1:0,lootBoost()),0);}
 }
@@ -161,10 +161,10 @@ function addLoot(it){if(SAVE.stash.length>=STASH_MAX)return false;SAVE.stash.pus
 function hurt(d,magic){
   if(P.inv>0||P.dead||ending||cine)return;
   if(relicBlock())return;RUN.lastHurt=runT;
-  P.hp-=wuxHurt((magic?d*(1-ST.mres/100):d*100/(100+ST.def))*relicTaken()*RUN.taken);P.inv=Math.max(P.inv,.22);relicOnHurt();shake(.3);SFX.hurt();buzz(35);flash(P.x,P.y-20,160,.15);
+  P.hp-=wuxHurt((magic?d*(1-ST.mres/100):d*100/(100+ST.def))*relicTaken()*RUN.taken);P.inv=Math.max(P.inv,.22);P.hurtT=.3;relicOnHurt();shake(.3);SFX.hurt();buzz(35);flash(P.x,P.y-20,160,.15);
   if(FX.thorns)for(const e of enemies){const dx=e.x-P.x,dy=e.y-P.y,dd=Math.hypot(dx,dy)||1;if(dd<130+e.r)hitEnemy(e,28*(1+P.level*.1)*FX.thorns,dx/dd,dy/dd,320,'thud');}
   if(P.hp<=0&&(relicRevive()||metaRevive()))return;
-  if(P.hp<=0){P.hp=0;P.dead=true;ending={win:false,t:1.3};debris(P.x,P.y,['#f3e6c8','#2f7b7e','#f08a3c'],12,1.3);puff(P.x,P.y-20,8);}
+  if(P.hp<=0){P.hp=0;P.dead=true;ending={win:false,t:1.3};P.deadT=clock;if(SFX.die)SFX.die();debris(P.x,P.y,['#f3e6c8','#2f7b7e','#f08a3c'],12,1.3);puff(P.x,P.y-20,8);}
 }
 function winRun(){
   ending={win:true,t:2.6};const mi=mapIdx();
@@ -174,19 +174,19 @@ function winRun(){
 }
 function finishRun(){
   const win=ending&&ending.win,bk=bestKey(),old=SAVE.best[bk];
-  if(!old||(win&&!old.win)||(!old.win&&runT>old.t)||(win&&old.win&&kills>old.kills))SAVE.best[bk]={t:Math.floor(runT),kills,lv:P.level,win:!!win};
+  if(!old||(win&&!old.win)||(!old.win&&runT>old.t)||(win&&old.win&&kills>old.kills)){SAVE.best[bk]={t:Math.floor(runT),kills,lv:P.level,win:!!win};RUN.newBest=true;}
   metaRunEnd(!!win);saveNow();state='over';cine=null;uiCine(null);uiResult(!!win);
 }
 function spawn(type,o){
   o=o||{};const T=ET[type],m=runT/60,a=Math.random()*TAU;
   /* 강화된 적: 시간이 갈수록, 어려운 맵일수록 자주 섞여 나온다(크고 붉은 기운, 체력 4배·공격 1.5배, 장비를 잘 떨어뜨림) */
-  const champ=!T.elite&&!o.sc&&Math.random()<DIFF.champ(m)+MAP.champ,sc=o.sc||(champ?1.35:1),rad=viewRad()+80+(sc>1?60:0);
+  const champ=!T.elite&&!o.sc&&Math.random()<DIFF.champ(m)+MAP.champ,sc=o.sc||(champ?1.35:1),rad=(runT<25?viewRad()*.72:viewRad()+80)+(sc>1?60:0); // 처음 25초는 화면 가장자리 안쪽에서 나와 바로 싸움이 붙는다
   const e={kind:'enemy',T,type,ai:T.ai||'chase',x:o.at?o.at[0]:P.x+Math.cos(a)*rad,y:o.at?o.at[1]:P.y+Math.sin(a)*rad*.85,kx:0,ky:0,
-    hp:T.hp*DIFF.hp(m)*MAP.hp*RUN.ehp*(o.hpMul||1)*(champ?4:1),dmg:T.dmg*DIFF.dmg(m)*MAP.dmg*RUN.edmg*(o.dmgMul||1)*(champ?1.5:1),xp:Math.ceil(T.xp*DIFF.xp(m)*(champ?4:1)),r:T.r*sc,sc,sm:DIFF.spd(m),champ,
+    hp:T.hp*DIFF.hp(m)*MAP.hp*RUN.ehp*(o.hpMul||1)*(champ?4:1)*(o.boss?Math.sqrt(ADAPT):ADAPT),dmg:T.dmg*DIFF.dmg(m)*MAP.dmg*RUN.edmg*(o.dmgMul||1)*(champ?1.5:1),xp:Math.ceil(T.xp*DIFF.xp(m)*(champ?4:1)),r:T.r*sc,sc,sm:DIFF.spd(m),champ,
     flash:0,hitT:0,slow:0,stun:0,ice:0,weak:0,bt:0,bt2:0,ovT:0,dotT:0,dps:0,dotK:'fire',dotAcc:0,st:0,at:rand(1.5,4),at2:6,cx:0,cy:0,sx:0,sy:0,
     phase:Math.random(),dir:1,age:0,seed:Math.random()*9,dead:false,boss:o.boss||0,elite:!!T.elite,name:o.name||T.n,def:T.def||0,mres:T.mres||0,pst:0,rage:0,fade:0,lane:0};
   if(!o.at&&Math.hypot(e.x,e.y/.85)>WORLD_R-60){e.x=2*P.x-e.x;e.y=2*P.y-e.y;}if(!o.at)keepIn(e,60);
-  e.maxhp=e.hp;enemies.push(e);cxSee('m',type);return e;
+  e.maxhp=e.hp;enemies.push(e);if(o.boss!==3)cxSee('m',type);/* 잠든 수호자는 깨어날 때 도감에 */return e;
 }
 function pickSpawn(m){const pool=SPAWNS.filter(s=>m>=s.from),wt=s=>(MAP.w[s.type]||s.w)*spawnFade(s,m);let r=Math.random()*pool.reduce((a,s)=>a+wt(s),0);for(const s of pool){r-=wt(s);if(r<=0)return s.type;}return'moss';}
 function gainXp(v){
@@ -200,11 +200,12 @@ function gainXp(v){
 const fusedCount=()=>Object.keys(P.act).filter(k=>ACTIVES[k].fuse).length;
 /* 조합 조건: 재료 둘 다 FUSE_LV 단계 + 주인공 FUSE_PLV 레벨 + 한 판에 FUSE_MAX 개까지 */
 const fusionReady=id=>{const A=ACTIVES[id];return !!A.fuse&&!P.act[id]&&P.level>=FUSE_PLV&&fusedCount()<FUSE_MAX&&A.fuse.every(k=>(P.act[k]||0)>=FUSE_LV);};
+const usedUp=id=>Object.keys(P.act).some(k=>ACTIVES[k].fuse&&ACTIVES[k].fuse.includes(id)); /* 조합 재료로 쓰인 스킬 */
 function rollChoices(kind){
   const n=Math.min(4,choiceCount(ST.luck)+(FX.wisdom||0)+tal('choice')+RUN.choice),mix=a=>a.slice().sort(()=>Math.random()-.5); // 11-15 대표님: 3개, 행운에 따라 4개, 최대 4개
   if(kind==='pas'){const own=Object.keys(P.pas);return mix(own.length>=MAX_PAS?own:Object.keys(PASSIVES)).slice(0,n);}
   /* 액티브: 조합 스킬은 재료가 갖춰졌을 때만 나오고(맨 위에 한 장 더), 배운 뒤에는 다른 스킬처럼 섞여 나온다 */
-  const ready=Object.keys(ACTIVES).filter(fusionReady),all=Object.keys(ACTIVES).filter(id=>!ACTIVES[id].fuse||P.act[id]),open=all.filter(id=>(P.act[id]||0)<SKILL_MAX),pool=open.length?open:all; // 스킬은 SKILL_MAX 단계까지
+  const ready=Object.keys(ACTIVES).filter(fusionReady),all=Object.keys(ACTIVES).filter(id=>(!ACTIVES[id].fuse||P.act[id])&&!usedUp(id)),open=all.filter(id=>(P.act[id]||0)<SKILL_MAX),pool=open.length?open:all; // 스킬은 SKILL_MAX 단계까지
   return (ready.length?[pick(ready)]:[]).concat(mix(pool).slice(0,ready.length?n-1:n));
 }
 function takeChoice(kind,id){
@@ -266,7 +267,9 @@ function doWave(R,dmg,p){waves.push({x:P.x,y:P.y-12,r:24,R,dmg,hit:new Set(),stu
 const ACTIVES={
   slash:{n:'베기',d:'가까운 적 쪽으로 넓게 벱니다.',cd:.85,
     ups:[['등 뒤도 함께 벱니다',{back:1}],['피해 +25%',{dmg:.25}],['베면서 검기를 날립니다',{wave:1}],['범위 +15%',{area:.15}],['한 번에 두 번 벱니다',{twin:1}],['쿨타임 -20%',{cd:.2}],['피해 +25%',{dmg:.25}],['피해 +30%',{dmg:.3}]],
-    fire(p){const R=118*p.area*(1+.3*(FX.slashWide||0))*AREA,t=nearest(P.x,P.y,R+30);if(!t)return false;
+    fire(p){const R=118*p.area*(1+.3*(FX.slashWide||0))*AREA,t=nearest(P.x,P.y,R+30);
+      if(!t){const f=nearest(P.x,P.y,330);if(!f)return false;const a=Math.atan2(f.y-12-(P.y-20),f.x-P.x);P.dir=Math.cos(a)>=0?1:-1;P.swing=0;SFX.slash(); // 멀면 검기만
+        shots.push({k:'crescent',x:P.x,y:P.y-20,vx:Math.cos(a)*560,vy:Math.sin(a)*560,a,life:.6,dmg:30*p.dmg*.75,r:28*p.area,hit:new Set()});return true;}
       const a=Math.atan2(t.y-P.y,t.x-P.x),dmg=30*p.dmg;P.dir=Math.cos(a)>=0?1:-1;P.swing=0;SFX.slash();
       doSlash(a,R,dmg);if(p.back)doSlash(a+Math.PI,R*.9,dmg*.8);onSlash2(a,R,dmg);relicOnSlash(a,dmg);if(nearest(P.x,P.y,R))freeze=Math.max(freeze,.018);
       if(p.wave)shots.push({k:'crescent',x:P.x,y:P.y-20,vx:Math.cos(a)*540,vy:Math.sin(a)*540,a,life:.6,dmg:dmg*.6,r:30*p.area,hit:new Set()});
@@ -404,7 +407,7 @@ function update(dt){
     const bossOn=!!(bossRef&&!bossRef.dead&&!bossRef.sleep),bt=runT-bossSince,calm=bossOn&&bt<60,bk2=bossOn?(bt<45?.3:Math.min(1,.3+(bt-45)/60*.7)):1;
     const cap=Math.min(DIFF.cap(m),W<700?290:420)*Math.max(.35,bk2);spawnAcc+=dt*DIFF.spawn(m)*DIFF.pace(runT)*MAP.spawn*RUN.spawn*(hordeT>0?2.5:1)*(burnT>0?1.6:1)*bk2;
     while(spawnAcc>=1){const t=pickSpawn(m);spawnAcc-=ET[t].cost||1;if(enemies.length<cap){const e=spawn(t);for(let k=1;k<(e.T.pack||1);k++)spawn(t,{at:[e.x+rand(-46,46),e.y+rand(-46,46)]});}} // pack: 떼로 나오는 적
-    if(runT>=nextElite){nextElite+=ELITE_EVERY*RUN.eliteEvery;if(!calm)spawn(eliteKind(m));}
+    if(runT>=nextElite){nextElite+=ELITE_EVERY*RUN.eliteEvery;if(!calm&&enemies.filter(e=>e.elite&&!e.boss&&!e.dead).length<4)spawn(eliteKind(m));} /* 2회차: 정예는 동시에 4마리까지(못 잡으면 화면을 덮던 것) */
     if(!miniDone&&runT>=MINI_HORDE){miniDone=true;uiBanner('작은 무리');const n=16,rad=viewRad()+30;for(let i=0;i<n;i++){const a=i/n*TAU;spawn('moss',{at:[P.x+Math.cos(a)*rad,P.y+Math.sin(a)*rad*.85]});}}
     if(runT>=nextHorde&&calm)nextHorde=runT+20; // 보스가 막 나왔으면 몰려오기를 미룬다
     if(runT>=nextHorde){nextHorde+=HORDE_EVERY;hordeT=HORDE_LEN;uiBanner('적이 몰려옵니다');SFX.horn();
@@ -509,10 +512,10 @@ function update(dt){
   update2(dt,over);skill3Update(dt);updateWorld(dt);mobsUpdate(dt);relicTick(dt);
 
   // 경험치·장비 줍기
-  xpComboT-=dt;if(xpComboT<=0)xpCombo=0;const pr=110*(1+ST.pick/100);
+  xpComboT-=dt;if(xpComboT<=0)xpCombo=0;const pr=135*(1+ST.pick/100);
   for(const g of gems){g.t+=dt;const dx=P.x-g.x,dy=P.y-14-g.y,d=Math.hypot(dx,dy)||1;if(!P.dead&&(d<pr||g.pull)){g.pull=Math.min(900,(g.pull||160)+1500*dt);g.x+=dx/d*g.pull*dt;g.y+=dy/d*g.pull*dt;}
     if(d<18&&!P.dead){g.dead=true;xpCombo++;xpComboT=.5;SFX.xp(xpCombo);gainXp(g.v);}}
-  gems=gems.filter(g=>!g.dead);if(gems.length>260)gems.splice(0,gems.length-260);
+  gems=gems.filter(g=>!g.dead);if(gems.length>260){const old=gems.splice(0,gems.length-200);let v=0;for(const g of old)v+=g.v;const o=old[old.length-1];gems.push({x:o.x,y:o.y,v,t:0,pull:0});} // 넘치면 큰 보석 하나로(1회차)
   fullT-=dt;
   for(const d of drops){if(d.wait>0){d.wait-=dt;continue;}d.t+=dt;const gi=d.it.gi;
     if(!d.landed){d.vz-=820*dt;d.z+=d.vz*dt;d.x+=d.vx*dt;d.y+=d.vy*dt;if(d.z<=0){d.z=0;d.landed=true;

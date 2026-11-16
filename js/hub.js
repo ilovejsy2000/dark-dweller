@@ -5,10 +5,10 @@
    출발하면 주인공이 출구로 걸어 나가며 화면이 어두워지고 맵으로 넘어간다. 판이 끝나면 출구 쪽에서 걸어 들어온다.
    재련·분해는 야영지에서만 된다(판 안의 장비 창에서는 막음 — 나중에 수익 구조를 위해). */
 const HUB=[
-  {kind:'hub',k:'tal',x:-125,y:-150,n:'어둠의 제단',act:'특성'},
-  {kind:'hub',k:'cx',x:125,y:-150,n:'도감 비석',act:'도감'},
-  {kind:'hub',k:'forge',x:-185,y:55,n:'대장간',act:'재련 · 분해'},
-  {kind:'hub',k:'stash',x:185,y:55,n:'창고',act:'장비'},
+  {kind:'hub',k:'tal',x:-115,y:-150,n:'어둠의 제단',act:'특성'},
+  {kind:'hub',k:'cx',x:115,y:-150,n:'도감 비석',act:'도감'},
+  {kind:'hub',k:'forge',x:-138,y:60,n:'대장간',act:'재련 · 분해'},
+  {kind:'hub',k:'stash',x:136,y:60,n:'창고',act:'장비'},
   {kind:'hub',k:'exit',x:0,y:265,n:'동굴 출구',act:'바깥으로 · 출발 준비'},
 ];
 const CAVE={rx:300,ry:255,cy:0,exitW:70};          // 동굴 바닥(타원)과 출구 폭
@@ -28,6 +28,7 @@ function caveClamp(){
   const q=Math.hypot(P.x/(CAVE.rx-30),(P.y-CAVE.cy)/(CAVE.ry-30));if(q>1){P.x/=q;P.y=CAVE.cy+(P.y-CAVE.cy)/q;}
 }
 function hubUpdate(dt){
+  if(titleOn){show('hubTop',false);show('hubAct',false);return;}
   /* 들어오는 연출: 화면이 밝아지며 출구에서 걸어 들어온다 */
   if(hubEnter>0){hubEnter-=dt;P.move=true;P.y-=110*dt;P.dir=1;fadeTo(Math.max(0,hubEnter/.9));if(hubEnter<=0){fadeTo(0);P.move=false;}show('hubTop',false);show('hubAct',false);return;}
   /* 나가는 연출: 출구로 걸어가며 어두워진 뒤 맵으로 */
@@ -41,7 +42,7 @@ function hubUpdate(dt){
   const ml=Math.hypot(mx,my);if(ml>1){mx/=ml;my/=ml;}
   P.move=ml>.05;P.x+=mx*170*dt;P.y+=my*170*dt*.92;if(Math.abs(mx)>.1)P.dir=mx>0?1:-1;
   caveClamp();
-  const fd=Math.hypot(P.x,P.y+4);if(fd<34){P.x*=34/fd;P.y=(P.y+4)*34/fd-4;}
+  const fd=Math.hypot(P.x,(P.y+4)*1.25);if(fd<54){P.x*=54/fd;P.y=(P.y+4)*54/fd-4;} /* 11-16: 모닥불 위에 올라선 것처럼 보이지 않게 둘레를 넓힘 */
   for(const h of HUB){if(h.k==='exit')continue;const d=Math.hypot(P.x-h.x,(P.y-h.y)*1.4);if(d<32){P.x=h.x+(P.x-h.x)*32/d;P.y=h.y+(P.y-h.y)*32/d;}}
   let near=null,bd=1e9;for(const h of HUB){const d=Math.hypot(P.x-h.x,P.y-h.y);if(d<(h.k==='exit'?95:82)&&d<bd){bd=d;near=h;}}
   if(near!==hubNear){hubNear=near;const b=$('hubAct');if(near){b.textContent=`${near.n} · ${near.act}`;SFX.ui();}show('hubAct',!!near);}
@@ -120,11 +121,11 @@ function drawHub(o){
     blob(ctx,[[x-30,y-48],[x+30,y-48],[x+38,y-56],[x+12,y-56],[x+10,y-40],[x-10,y-40],[x-12,y-56],[x-30,y-56]]);inkF(ctx,'#7a80a8',3);rr(ctx,x-14,y-42,28,16,3);inkF(ctx,'#5d587e',3);
     ctx.save();ctx.translate(x+30,y-62);ctx.rotate(-.6+Math.sin(t*3)*.08);rr(ctx,-2,-2,4,26,2);inkF(ctx,'#8a5a2c',2.2);rr(ctx,-9,-8,18,9,2);inkF(ctx,'#9aa3bf',2.2);ctx.restore();
     if(Math.random()<.25)ember(x-43,y-34,1,5,60);break;}
-  case'stash':{blit(sprChest,x,y,1.35,1.35);lights.push([x,y-20,110,.55]);break;}
+  case'stash':{blit(sprChest,x,y,1.35,1.35);lights.push([x,y-20,110,.55]);drawStashBadge(x,y);break;}
   case'tal':{ // 돌 제단 + 떠 있는 보라 수정
     rr(ctx,x-22,y-30,44,30,5);inkF(ctx,'#5f6690',3);rr(ctx,x-28,y-36,56,9,3);inkF(ctx,'#7a80a8',3);
     const f=Math.sin(t*2)*3;poly(ctx,[[x,y-82-f],[x+12,y-58-f],[x,y-42-f],[x-12,y-58-f]]);inkF(ctx,'#b678ff',3);poly(ctx,[[x,y-78-f],[x+5,y-60-f],[x,y-50-f]]);ctx.fillStyle='#e9d8ff';ctx.fill();
-    lights.push([x,y-60,150,.75]);break;}
+    lights.push([x,y-60,150,.75]);drawTalBadge(x,y);break;}
   case'cx':{ // 글이 새겨진 비석
     ctx.beginPath();ctx.moveTo(x-20,y);ctx.lineTo(x-20,y-58);ctx.quadraticCurveTo(x,y-74,x+20,y-58);ctx.lineTo(x+20,y);ctx.closePath();inkF(ctx,'#7a80a8',3);
     ctx.lineWidth=2.2;ctx.strokeStyle='#3d4370';for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(x-11,y-50+i*11);ctx.lineTo(x+11,y-50+i*11);ctx.stroke();}

@@ -57,7 +57,7 @@ ET.ogre={...fbk('brute'),art:['b',7,150],n:'오우거',ai:'ogre',r:44,hp:1400,sp
 
 /* ───── 보스 9종 ─────
    기절·빙결 99% 면역, 둔화는 조금만. pats 쓰는 패턴, minions 부르는 부하, shotC 탄 색, pool 불바다를 남김, poolC·poolSlow 장판 색·둔화 */
-const BOSS_BASE={hp:6500,spd:80,dmg:40,xp:90,anim:.8,kb:.05,elite:true,ai:'boss',light:150};
+const BOSS_BASE={hp:3400,spd:80,dmg:40,xp:90,anim:.8,kb:.05,elite:true,ai:'boss',light:150};
 const BOSS_DEF={
   b_golem:{n:'바위 군주',art:['c',0,205],r:58,def:.6,mres:.3,pats:['slam','crack','summon','nova'],minions:['moss','rat','orc'],shotC:'#ff9a3c',deb:ROCK.concat('#ff9a3c')},
   b_ice:{n:'서리 여왕',art:['c',1,195],r:44,def:.3,mres:.7,pats:['aimed','pools','spiral','blink'],minions:['wisp'],shotC:'#9fd8ff',poolC:'#9fd8ff',poolSlow:1,deb:['#bfe9ff','#86c2ec','#f4fcff']},
@@ -69,7 +69,7 @@ const BOSS_DEF={
   b_dragon:{n:'그림자 용',art:['c',7,225],r:64,def:.5,mres:.6,pats:['breath','rain','charge','spiral'],shotC:'#b678ff',pool:1,deb:['#3f2a69','#5b3f8f','#b678ff']},
   b_reaper:{n:'사신 군주',art:['c',8,215],r:50,def:.5,mres:.6,pats:['blink','spiral','summon','nova','charge'],minions:['wraith'],shotC:'#9fe8c8',deb:['#2b2839','#efe6cf','#5b6aa8']},
 };
-for(const id in BOSS_DEF)ET[id]=Object.assign({},fbk('brute'),BOSS_BASE,BOSS_DEF[id]);
+for(const id in BOSS_DEF){ET[id]=Object.assign({},fbk('brute'),BOSS_BASE,BOSS_DEF[id]);ET[id].def*=.6;ET[id].mres*=.6;} // 2회차: 보스를 30~45초 안에 잡히게
 loadMobArt();
 
 /* 맵마다 나오는 보스: 앞의 셋이 5분마다 돌아가며, 마지막이 그 맵의 대군주(끝 보스) */

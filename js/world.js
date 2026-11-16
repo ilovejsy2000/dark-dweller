@@ -1,7 +1,7 @@
 'use strict';
 /* 다크 드웰러 — 넓은 맵: 보물 상자, 잠든 수호자(고정 보스 · 매우 강함 · 신화 장비 확정), 미니맵 */
 const WORLD_R=5000;            // 맵 크기: 모닥불에서 사방으로 이만큼(미니맵이 보여 주는 범위, 그 밖으로는 못 나간다)
-const GUARD_HP=3,GUARD_DMG=1.7,GUARD_N=6,CHEST_N=9; // 수호 보스 배율(그 시각의 보스 대비), 마릿수, 상자 수
+const GUARD_HP=5.5,GUARD_DMG=1.7,GUARD_N=6,CHEST_N=9; // 수호 보스 배율(그 시각의 보스 대비), 마릿수, 상자 수
 let chests=[],guards=[],nextChest=0,hudPad={l:16,t:10};
 function clearWorld2(){chests=[];guards=[];ezones=[];gims=[];}
 function addChest(near){const a=Math.random()*TAU,d=near?rand(420,620):rand(650,4700);chests.push({kind:'chest',x:Math.cos(a)*d,y:Math.sin(a)*d*.85,t:Math.random()*6});}
@@ -16,7 +16,7 @@ function initWorld(){
 /* 다가가거나 때리면 깨어난다. 깨어나는 순간의 시간·맵 난이도로 강해진다 */
 function wakeGuard(e){
   const m=runT/60,t=e.tier||0;e.sleep=false;e.name='깨어난 '+e.T.n;e.maxhp=e.hp=e.T.hp*DIFF.hp(m)*MAP.hp*GUARD_HP*(1+.35*t);e.dmg=e.T.dmg*DIFF.dmg(m)*MAP.dmg*GUARD_DMG*(1+.1*t);e.sm=DIFF.spd(m);e.xp=Math.ceil(e.T.xp*DIFF.xp(m)*(3+t));e.at=1.5;
-  if(!bossRef||bossRef.dead)bossRef=e;thinOut();cine={t:1.8,max:1.8,e};uiCine(e.name,false);SFX.elite();shake(.5);buzz(60);
+  if(!bossRef||bossRef.dead)bossRef=e;thinOut();cine={t:1.8,max:1.8,e};uiCine(e.name,false);$('cineSub').textContent='수호자 · 매우 강함';cxSee('m',e.type);setTimeout(()=>{if(state==='play')uiNote('수호자는 아주 강합니다 · 잡으면 신화 장비');},1900);SFX.elite();shake(.5);buzz(60);
 }
 /* 수호 보스 보상: 신화 확정. 먼 곳의 수호 보스일수록 더 준다 */
 function guardLoot(e){const t=e.tier||0;dropItem(e.x,e.y,4,0);if(t>=2)dropItem(e.x,e.y,3,.12);if(t>=4)dropItem(e.x,e.y,4,.24);uiBanner('수호 보스 처치');}
@@ -46,9 +46,20 @@ function renderWorldFx(){
 }
 function renderWorldGlow(){for(const c of chests)glow(c.x,c.y-14,46,'rgb(255,210,120)',.4+.15*Math.sin(c.t*3));}
 /* 미니맵: 왼쪽 위. 주황 = 모닥불, 흰 점 = 나, 금빛 네모 = 보물 상자, 빨간 마름모 = 수호자, 주황 고리 = 나타난 보스, 등급 색 점 = 전설·신화 장비 */
+/* 11-16: 화면 밖에 있는 중요한 것(갈림길 제단·황금 도깨비·보스·전설 이상 장비) 쪽 화면 가장자리에 화살표 */
+function guideArrows(tx,ty){if(state!=='play'||P.dead)return;const T=[];
+  if(RUN.altar)T.push([RUN.altar.x,RUN.altar.y,'#b678ff']);
+  for(const e of enemies)if(!e.dead&&e.type==='tgob')T.push([e.x,e.y,'#ffd56a']);
+  if(bossRef&&!bossRef.dead)T.push([bossRef.x,bossRef.y,'#ff6a4a']);
+  for(const d of drops)if(d.landed&&d.it.gi>=3)T.push([d.x,d.y,gradeColor(d.it)]);
+  const m=30,top=hudPad.t+(bossRef&&!bossRef.dead?135:85);let n=0; /* 위쪽 체력·보스 띠와 겹치지 않게 */
+  for(const[x,y,c]of T){if(n>=6)break;const sx=tx(x),sy=ty(y);if(sx>-8&&sx<W+8&&sy>-8&&sy<H+8)continue;n++;
+    const dx=sx-W/2,dy=sy-H/2,t=Math.min((W/2-m)/(Math.abs(dx)||1),(H/2-m)/(Math.abs(dy)||1)),px=W/2+dx*t,py=clamp(H/2+dy*t,top,H-m),a=Math.atan2(dy,dx),p=1+.12*Math.sin(clock*6);
+    ctx.save();ctx.translate(px,py);ctx.rotate(a);ctx.scale(p,p);ctx.beginPath();ctx.moveTo(13,0);ctx.lineTo(-8,-9);ctx.lineTo(-4,0);ctx.lineTo(-8,9);ctx.closePath();ctx.lineWidth=4;ctx.strokeStyle=INK;ctx.stroke();ctx.fillStyle=c;ctx.fill();ctx.restore();}
+}
 function drawMinimap(){
   if(state!=='play')return;
-  const s=96,x0=hudPad.l,y0=hudPad.t+60,k=s/(WORLD_R*2),lim=s/2-4,mx=w=>x0+s/2+clamp(w*k,-lim,lim),my=w=>y0+s/2+clamp(w*k,-lim,lim);
+  const s=96,x0=hudPad.l,y0=hudPad.t+60+(bossRef&&!bossRef.dead?44:0),k=s/(WORLD_R*2),lim=s/2-4,mx=w=>x0+s/2+clamp(w*k,-lim,lim),my=w=>y0+s/2+clamp(w*k,-lim,lim);
   rr(ctx,x0,y0,s,s,9);ctx.fillStyle='rgba(10,12,23,.74)';ctx.fill();ctx.lineWidth=3.5;ctx.strokeStyle=INK;ctx.stroke();ctx.lineWidth=1.3;ctx.strokeStyle='#3d4889';ctx.stroke();
   ctx.lineWidth=1;ctx.strokeStyle='rgba(154,163,191,.16)';ctx.beginPath();ctx.moveTo(x0+s/2,y0+5);ctx.lineTo(x0+s/2,y0+s-5);ctx.moveTo(x0+5,y0+s/2);ctx.lineTo(x0+s-5,y0+s/2);ctx.stroke();
   ctx.fillStyle='#ff9a3c';ell(ctx,mx(0),my(0),2.8,2.8);ctx.fill();

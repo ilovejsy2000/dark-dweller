@@ -12,18 +12,18 @@ function runInit(){return{ehp:1,edmg:1,spawn:1,xp:1,pdmg:1,php:1,taken:1,espd:1,
   gobT:rand(80,130),altarT:150,altar:null,quest:null,questT:50,newCx:0};}
 
 /* ───── ① 특성 ───── */
-const TALENTS=[
-  {id:'hp',n:'강인함',d:'최대 체력 +20',max:10,c:8,ap:(s,l)=>{s.hp+=20*l;}},
-  {id:'dmg',n:'힘',d:'피해 +3%',max:10,c:10,ap:(s,l)=>{s.dmg+=3*l;}},
-  {id:'def',n:'단련',d:'방어 +4',max:5,c:8,ap:(s,l)=>{s.def+=4*l;}},
-  {id:'regen',n:'회복력',d:'초당 체력 회복 +0.4',max:5,c:8,ap:(s,l)=>{s.regen+=.4*l;}},
-  {id:'move',n:'민첩',d:'이동 속도 +3%',max:5,c:8,ap:(s,l)=>{s.move+=3*l;}},
-  {id:'pick',n:'수집가',d:'획득 범위 +12%',max:5,c:6,ap:(s,l)=>{s.pick+=12*l;}},
-  {id:'xp',n:'배움',d:'경험치 +5%',max:10,c:10,ap:(s,l)=>{s.xp+=5*l;}},
-  {id:'cdr',n:'집중',d:'쿨타임 -1%',max:5,c:12,ap:(s,l)=>{s.cdr+=l;}},
-  {id:'crit',n:'예리함',d:'치명타 확률 +1%',max:5,c:12,ap:(s,l)=>{s.crit+=l;}},
+const TALENTS=[ /* max:Infinity = 상한 없음(11-16 대표님) */
+  {id:'hp',n:'강인함',d:'최대 체력 +20',max:Infinity,c:8,ap:(s,l)=>{s.hp+=20*l;}},
+  {id:'dmg',n:'힘',d:'피해 +3%',max:Infinity,c:10,ap:(s,l)=>{s.dmg+=3*l;}},
+  {id:'def',n:'단련',d:'방어 +4',max:Infinity,c:8,ap:(s,l)=>{s.def+=4*l;}},
+  {id:'regen',n:'회복력',d:'초당 체력 회복 +0.4',max:Infinity,c:8,ap:(s,l)=>{s.regen+=.4*l;}},
+  {id:'move',n:'민첩',d:'이동 속도 +3%',max:Infinity,c:8,ap:(s,l)=>{s.move+=3*l;}},
+  {id:'pick',n:'수집가',d:'획득 범위 +12%',max:Infinity,c:6,ap:(s,l)=>{s.pick+=12*l;}},
+  {id:'xp',n:'배움',d:'경험치 +5%',max:Infinity,c:10,ap:(s,l)=>{s.xp+=5*l;}},
+  {id:'cdr',n:'집중',d:'쿨타임 -1%',max:Infinity,c:12,ap:(s,l)=>{s.cdr+=l;}},
+  {id:'crit',n:'예리함',d:'치명타 확률 +1%',max:Infinity,c:12,ap:(s,l)=>{s.crit+=l;}},
   {id:'reroll',n:'다시 굴리기',d:'판마다 레벨업 선택지를 다시 굴리는 횟수 +1',max:3,c:25},
-  {id:'rare',n:'행운의 별',d:'희귀 선택지(2단계 오름)가 나올 확률 +3%',max:5,c:15},
+  {id:'rare',n:'행운의 별',d:'희귀 선택지(2단계 오름)가 나올 확률 +1.5%',max:5,c:15},
   {id:'revive',n:'불사',d:'판마다 한 번, 쓰러지면 체력 50%로 일어납니다',max:1,c:150},
   {id:'choice',n:'혜안',d:'레벨업 선택지 +1',max:1,c:200},
 ];
@@ -39,9 +39,10 @@ function metaRunEnd(win){
   if(win)n+=rift?10*rift.tier:25+15*Math.max(0,mi);
   const today=dayKey();
   if(RUN.daily&&win&&(!SAVE.daily||SAVE.daily.done!==today)){SAVE.daily={done:today};n+=80;addLoot(makeItem(3,curFloor()));RUN.dailyPrize=1;}
-  RUN.shardGain=n;SAVE.shard=(SAVE.shard||0)+n;
+  RUN.shardGain=n;SAVE.shard=(SAVE.shard||0)+n;SAVE.runs=(SAVE.runs||0)+1;
+  if(RUN.newbie&&runT>120)for(let i=0;i<2;i++)addLoot(makeItem(rollGrade(1,lootBoost()+.5),curFloor())); // 4회차: 장비가 약한 동안 덤 장비
 }
-function metaResult(){$('resSum').textContent+=` · 어둠 결정 +${RUN.shardGain}`+(RUN.dailyPrize?' (오늘의 도전 보상 포함)':'');}
+function metaResult(){if(RUN.dailyPrize)$('resSum').textContent+=' · 오늘의 도전 보상: 결정 80 + 전설 장비';}
 
 /* ───── ② 보물 고블린 ───── */
 ET.tgob={...ET.goblin,art:['d',2,66],n:'보물 고블린',ai:'flee',r:16,hp:900,spd:128,dmg:0,xp:20,anim:3.4,kb:.5,harmless:true,tint:'rgba(255,196,40,.5)',light:110,deb:['#ffd56a','#c9962e','#fff0c2']};
@@ -104,6 +105,7 @@ function metaUpdate(dt){
     if(q.left<=0)questFail();}
 }
 function metaKill(e){
+  pickOnKill(e);
   if(e.type==='tgob')goblinLoot(e);
   if(e.elite&&!e.boss&&RUN.eliteLoot>0){RUN.eliteLoot--;dropItem(e.x,e.y,rollGrade(2,lootBoost()+1),.2);}
   const q=RUN.quest;if(q){if(q.Q.k==='kill')q.n++;else if(q.Q.k==='elite'&&e.elite&&!e.boss)q.n++;}
@@ -163,7 +165,7 @@ function openRefine(it,slot,msg){
 }
 
 /* ───── ④ 희귀 선택지 ───── */
-const rareChance=()=>.07+.03*tal('rare');
+const rareChance=()=>.03+.015*tal('rare'); /* 11-16 대표님 "너무 자주 나와 고르는 재미를 막는다": 7%→3% */
 function canRare(kind,id){const lv=(kind==='act'?P.act:P.pas)[id]||0;return kind==='act'?lv+2<=SKILL_MAX:true;}
 
 /* ───── ⑥ 도감 ───── */
@@ -207,12 +209,13 @@ function metaLobbyRefresh(){
     $('mapDesc').textContent=`${MAPS[p.map].k}에서 10분을 버티고 끝 보스를 잡으세요. `+p.mods.map(m=>`${m.n}: ${m.d}.`).join(' ');
     $('best').textContent=done?'오늘 보상은 이미 받았습니다. 다시 해도 결정은 얻습니다.':'처음 깨면 어둠 결정 80 + 전설 장비 하나.';}
 }
+const TAL_ICON={hp:'p_vigor',dmg:'p_might',def:'p_hide',regen:'p_regen',move:'p_swift',pick:'p_magnet',xp:'p_learn',cdr:'p_focus',crit:'p_keen',reroll:'p_luck',rare:'p_luck',revive:'golden',choice:'p_learn'};
 function renderTal(){const box=$('talList');box.innerHTML='';$('talShard').textContent=`어둠 결정 ${SAVE.shard||0}`;
-  for(const t of TALENTS){const l=tal(t.id),c=talCost(t),row=el('div','talrow'+(l>=t.max?' max':''));const tx=el('div');tx.append(el('b',null,t.n),el('span','lv',`${l} / ${t.max}`),el('p',null,t.d));
+  for(const t of TALENTS){const l=tal(t.id),c=talCost(t),row=el('div','talrow'+(l>=t.max?' max':''));const ic=el('img','talic');ic.src=skillIconURL(TAL_ICON[t.id]||'p_might');ic.alt='';row.append(ic);const tx=el('div');tx.append(el('b',null,t.n),el('span','lv',t.max===Infinity?`${l}단계`:`${l} / ${t.max}`),el('p',null,t.d));
     const b=btn(l>=t.max?'최대':`올리기 ${c}`,()=>{if(tal(t.id)>=t.max||(SAVE.shard||0)<c)return;SAVE.shard-=c;(SAVE.tal||(SAVE.tal={}))[t.id]=l+1;saveNow();SFX.level();renderTal();},'ghost sm');
     if(l>=t.max||(SAVE.shard||0)<c)b.disabled=true;row.append(tx,b);box.append(row);}}
 function renderCx(){const C=SAVE.cx||(SAVE.cx={m:{},f:{},g:{},done:{}}),A=cxAll(),box=$('cxList');box.innerHTML='';
   const sec=(title,cat)=>{const n=A[cat].filter(k=>C[cat][k]).length;box.append(el('div','cxh',`${title} ${n} / ${A[cat].length}`+(C.done[cat]?' · 완성':' · 다 모으면 결정 +50')));const g=el('div','cxg');box.append(g);return g;};
-  let g=sec('적','m');for(const k of A.m){const t=el('div','cxt'+(C.m[k]?'':' no'));if(C.m[k]){const im=el('img');im.src=mobURL(k);im.alt='';t.append(im);}t.append(el('small',null,C.m[k]?ET[k].n:'???'));g.append(t);}
+  let g=sec('적','m');for(const k of A.m){const t=el('div','cxt'+(C.m[k]?'':' no'));{const im=el('img');im.src=mobURL(k);im.alt='';t.append(im);}t.append(el('small',null,C.m[k]?ET[k].n:'???'));g.append(t);}
   g=sec('조합 스킬','f');for(const k of A.f){const t=el('div','cxt'+(C.f[k]?'':' no'));const im=el('img');im.src=skillIconURL(k);im.alt='';t.append(im,el('small',null,C.f[k]?ACTIVES[k].n:'???'));g.append(t);}
   g=sec('전설 · 신화 장비','g');g.classList.add('names');for(const k of A.g){const my=k.split(':')[1][0]==='m',s=el('span',C.g[k]?(my?'my':'lg'):'no',C.g[k]?cxName(k):'???');g.append(s);}}

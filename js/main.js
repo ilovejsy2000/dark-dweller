@@ -27,6 +27,11 @@ document.addEventListener('visibilitychange',()=>{document.hidden?ddHide():ddSho
 window.addEventListener('pagehide',ddHide);
 /* 앱의 뒤로 가기 단추: 열린 창을 닫거나 게임을 멈춘다. 닫을 것이 없으면 false 를 돌려주고, 그러면 앱이 뒤로 물러난다 */
 function ddBack(){
+  /* 5회차(11-15): 새 창들도 뒤로 가기로 닫힌다. 광고·부활·계약·레벨업은 고르기 전엔 앱이 내려가지 않게 막기만 */
+  if(!$('adBox').hidden||!$('revive').hidden||!$('pact').hidden||(state==='play'&&choosing))return true;
+  if(!$('tal').hidden){$('talClose').click();return true;}
+  if(!$('cx').hidden){$('cxClose').click();return true;}
+  if(state==='lobby'&&!$('lobby').hidden){show('lobby',false);return true;}
   if(!$('help').hidden){show('help',false);return true;}
   if(!$('tip').hidden){show('tip',false);return true;}
   if(!$('cfg').hidden){closeCfg();return true;}
@@ -52,15 +57,15 @@ function tick(raw){
   if(state==='play'&&!held){
     if(cine){cine.t-=raw;dt*=.1;if(cine.t<=0){cine=null;uiCine(null);}} // 보스 등장: 잠깐 느려지고 화면이 보스를 비춘다
     if(ending){ending.t-=raw;dt*=.3;}
-    update(dt*SPEEDS[CFG.spd]);
-    if(ending&&ending.t<=0)finishRun();else{if(pendingLv>0&&!ending&&!cine)uiOpenChoice();uiHud();}
+    update(dt*SPEEDS[CFG.spd]);tutTick(raw);pickTick(dt*SPEEDS[CFG.spd]);adaptTick(dt*SPEEDS[CFG.spd]);
+    if(ending&&ending.t<=0){if(!reviveOffer())finishRun();}else{if(pendingLv>0&&!ending&&!cine)uiOpenChoice();uiHud();}
   }else if(state!=='play'){if(state==='lobby')hubUpdate(raw);for(const p of parts){p.life-=raw;if(p.k==='ember'){p.x+=p.vx*raw;p.y+=p.vy*raw;}}parts=parts.filter(p=>p.life>0);}
   bossMood+=((state==='play'&&bossRef&&!bossRef.dead?1:0)-bossMood)*Math.min(1,raw*2.2);
-  if(!held){ambTick(raw);if(Math.random()<raw*16)ember(0,-26,1,9,70);}
+  ambTick(raw);if(!held){if(Math.random()<raw*16)ember(0,-26,1,9,70);}
   for(const f of flashes)f.life-=raw;flashes=flashes.filter(f=>f.life>0);
   trauma=Math.max(0,trauma-raw*1.9);const kd=Math.exp(-raw*14);kick.x*=kd;kick.y*=kd;
   const k=1-Math.exp(-raw*7),down=state==='lobby'&&!$('lobby').hidden?H/S*.2:0; // 거점에서는 모닥불이 카드 위로 보이게
-  let tx=P.x,ty=P.y-22+down;if(cine&&cine.e&&cine.t>.55&&cine.t<cine.max-.12){tx=cine.e.x;ty=cine.e.y-60;}
+  let tx=state==='lobby'?P.x*.45:P.x,ty=state==='lobby'?P.y*.4-30+down:P.y-22+down;/* 3회차: 동굴은 전체가 보이게 */if(cine&&cine.e&&cine.t>.55&&cine.t<cine.max-.12){tx=cine.e.x;ty=cine.e.y-60;}
   cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;
   render(held?0:raw);
 }

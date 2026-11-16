@@ -138,14 +138,14 @@ const MODES=[{k:'클리어',t:-1},{k:'무한',t:0}];
 /* 액티브는 가짓수 제한 없이 전부 배울 수 있다(11-14 대표님). 패시브는 6종까지. */
 const BOSS_EVERY=300,ELITE_FROM=45,ELITE_EVERY=25,MAX_ACT=99,MAX_PAS=6;
 /* 사건: 몰려오기(90초부터 3분마다 12초), 버닝 타임(3분부터 3분마다 20초: 경험치 2배·드롭 2.5배·적 더 많이) */
-const MINI_HORDE=40,HORDE_FROM=90,HORDE_EVERY=180,HORDE_LEN=12,BURN_FROM=180,BURN_EVERY=180,BURN_LEN=20;
+const MINI_HORDE=40,HORDE_FROM=90,HORDE_EVERY=180,HORDE_LEN=12,BURN_FROM=240,BURN_EVERY=180,BURN_LEN=20;
 
 /* 난이도: m = 버틴 분 */
 const DIFF={
   spawn:m=>Math.min(32,2.4+m*2.4),            // 초당 등장 수
   cap:m=>Math.min(440,190+m*26),              // 동시에 있는 적의 한도
   hp:m=>(.75+.75*m)*Math.pow(1.105,m), // 11-15 대표님 "시간에 따라 체력을 더 탄력적으로": 1.08 → 1.105 (10분 22배, 20분 116배, 30분 460배)         // 적 체력 배율 (시작 0.75배, 5분 6.6배, 10분 17배, 20분 75배) — 초반만 살짝 약하게. 기본 체력 자체를 3배쯤 올려 처음부터 여러 번 때려야 죽는다
-  dmg:m=>1+.42*m,                              // 적 공격 배율
+  dmg:m=>m<5?1+.3*m:2.5+.5*(m-5),                              // 적 공격 배율
   spd:m=>1+Math.min(.45,m*.025),              // 적 이동 속도 배율
   xp:m=>1+.15*m+.035*m*m,                     // 경험치 배율(늦게 갈수록 크게: 10분 5배, 20분 18배, 30분 37배)
   champ:m=>Math.min(.35,Math.max(0,(m-.5)*.04)), // 강화된 적(크고 붉은 기운)이 섞여 나올 확률
@@ -163,7 +163,7 @@ const FUSE_LV=5,FUSE_PLV=1,FUSE_MAX=99,SKILL_MAX=10; // 재료 단계, 주인공
    hp·dmg·spawn 적 배율, champ 강화된 적 확률 더하기, loot 높은 등급 확률 더하기, floor 장비 수치 바닥값 더하기,
    dark 어둠 색과 짙기, light 주인공 빛 반경, pal 땅 색, w 적 등장 비중 바꾸기 */
 const MAPS=[
-  {k:'모닥불 숲',star:1,clear:600,d:'처음 가는 곳입니다. 적이 순한 편입니다. 축복 제단 위에 잠깐 서 있으면 40초 동안 강해집니다.',hp:1,dmg:1,spawn:1,champ:0,loot:0,floor:0,dark:[8,10,30,.34],light:300,
+  {k:'모닥불 숲',star:1,clear:600,d:'가장 쉬운 곳입니다. 적이 순한 편입니다. 축복 제단 위에 잠깐 서 있으면 40초 동안 강해집니다.',hp:1,dmg:1,spawn:1,champ:0,loot:0,floor:0,dark:[8,10,30,.34],light:300,
     pal:{base:'#3e3a54',mossA:'#2c587e',mossB:'#316189',tuft:'#5490c0',speck:'rgba(120,180,220,.22)',cobble:'rgba(125,115,160,.085)',cov:.53},w:{}},
   {k:'서리 폐허',star:2,clear:900,d:'마법을 쓰는 적이 많습니다. 얼음 수정에 닿으면 둘레의 적이 얼어붙고, 이따금 눈보라가 붑니다.',hp:2.4,dmg:1.5,spawn:1.05,champ:.03,loot:.6,floor:.1,dark:[10,18,40,.34],light:300,
     pal:{base:'#48506e',mossA:'#b9cfe6',mossB:'#a6c0dc',tuft:'#e6f2ff',speck:'rgba(255,255,255,.5)',cobble:'rgba(200,215,240,.07)',cov:.5},w:{wisp:9,shaman:7,moss:6,wraith:6,sorcerer:3,beetle:5}},
@@ -181,7 +181,7 @@ const SPAWNS=[{type:'moss',from:0,to:4,w:10},{type:'rat',from:.3,to:5,w:6},{type
 const spawnFade=(s,m)=>m<s.from?0:Math.min(1,(m-s.from)+.3)*(s.to!==undefined&&m>s.to?Math.max(.2,1-(m-s.to)/2):1);
 /* 레벨업에 드는 경험치. 11-14 대표님 목표: 10분 45~50레벨, 20분 75, 30분 100(무적 시험으로 잰 경험치 수입에 맞춤).
    앞쪽 30레벨은 할인(초반에 빨리 올라 재미있게), 높은 레벨은 증가가 완만해진다 */
-const needXp=L=>Math.max(4,Math.round(.8*(4+3*L+5*L*L/(1+L/80))*Math.min(1,.3+.7*L/30)*(L<=20?1:1+1.2*Math.pow((L-20)/30,1.5)))); // 11-15 대표님 "높은 레벨도 너무 빨라": 20레벨 뒤로 배수(50레벨 2.2배, 80레벨 4.4배) // .8: 스킬을 집중해 키우는 자동 플레이로 재어 맞춘 값(10분 47~54레벨, 20분 약 75, 30분 약 100 — 보스를 얼마나 빨리 잡느냐에 따라 흔들림)
+const needXp=L=>Math.max(3,Math.round(.8*(4+3*L+5*L*L/(1+L/80))*Math.min(1,.3+.7*L/30)*(L<=20?1:1+1.2*Math.pow((L-20)/30,1.5))*(L===1?1.6:L<=12?3.5-2.5*(L-1)/11:1))); // 11-16 페이블 시험 "초반 1분에 10레벨, 그 뒤 뚝 느려짐" → 2~12레벨을 3.5배→1배로 늘려 1분 7레벨·2분 11레벨·3분 15레벨쯤으로 고르게(첫 레벨업은 10초 안) // 11-15 대표님 "높은 레벨도 너무 빨라": 20레벨 뒤로 배수(50레벨 2.2배, 80레벨 4.4배) // .8: 스킬을 집중해 키우는 자동 플레이로 재어 맞춘 값(10분 47~54레벨, 20분 약 75, 30분 약 100 — 보스를 얼마나 빨리 잡느냐에 따라 흔들림)
 /* 선택지 수: 기본 3, 행운 25 에 4개. 11-15부터 무엇을 더해도 최대 4개(game.js rollChoices) */
 const choiceCount=luck=>3+(luck>=25?1:0)+(luck>=60?1:0);
 const EARLY_CHOICE_LV=10; // 이 레벨까지는 선택지가 하나 더(초반에 고르는 재미)

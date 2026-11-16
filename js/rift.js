@@ -12,13 +12,13 @@ function riftMap(tier,mi){const B=MAPS[mi];return Object.assign({},B,{k:'영겁�
   champ:Math.min(.25,.04+.01*tier),loot:Math.min(4,.6+.15*tier),floor:Math.min(.5,.1+.02*tier),clear:0});}
 /* 게이지: 보통 적 1, 강화된 적 4, 정예 15, 수호 보스 40 */
 const riftNeed=tier=>5000+tier*50; // 무적 자동 플레이로 재어 1단계 수호자가 5~6분쯤 나오게(11-15)
-function riftStartMap(tier){MAP=riftMap(tier,Math.random()*4|0);Object.assign(MAPC,MAP.pal);chunks.clear();}
+function riftStartMap(tier){MAP=riftMap(tier,Math.random()*4|0);Object.assign(MAPC,MAP.pal);chunks.clear();propMap.clear();}
 function riftBegin(tier){rift={tier,prog:0,need:riftNeed(tier),guard:null,done:false,gain:0};nextBoss=Infinity;uiBanner(`영겁의 굴레 ${tier}단계`);}
 function riftKill(e){if(!rift||rift.guard||e.boss===2)return;
   rift.prog+=e.guard?40:e.elite?15:e.champ?4:1;
   if(rift.prog>=rift.need)riftGuard();}
 function riftGuard(){const ids=Object.keys(BOSS_DEF),bk=pick(ids),a=Math.random()*TAU,rad=viewRad()*.8;rift.prog=rift.need;
-  rift.guard=bossRef=spawn(bk,{hpMul:3,dmgMul:1.3,boss:2,name:'굴레의 수호자 · '+ET[bk].n,at:[P.x+Math.cos(a)*rad,P.y+Math.sin(a)*rad*.8]});
+  rift.guard=bossRef=spawn(bk,{hpMul:5.5,dmgMul:1.3,boss:2,name:'굴레의 수호자 · '+ET[bk].n,at:[P.x+Math.cos(a)*rad,P.y+Math.sin(a)*rad*.8]});
   burnT=0;thinOut();cine={t:2.2,max:2.2,e:bossRef};uiCine(bossRef.name,true);SFX.elite();shake(.5);buzz(60);}
 function riftUpdate(){if(!rift||rift.done||ending)return;
   if(runT>=RIFT_T){rift.done=true;ending={win:false,t:1.6};uiBanner('시간 초과');for(const e of enemies)if(!e.dead&&!e.boss){e.dead=true;puff(e.x,e.y-e.r*.6,2);}}}

@@ -2,7 +2,7 @@
 /* 다크 드웰러 — 더한 스킬(대표님 구성표 참고): 번개·냉기·독·암흑 계열, 소환물, 조합 스킬.
    game.js 의 규칙에 얹힌다: update2(판 계산), onKill2(처치할 때), onSlash2(벨 때), render2*(그리기), drawSkillIcon2(아이콘) */
 let allies=[],zones2=[],darks=[],drains=[],suns=[];
-function clear2(){allies=[];zones2=[];darks=[];drains=[];suns=[];skill3Reset();}
+function clear2(){allies=[];zones2=[];darks=[];drains=[];suns=[];skill3Reset();pickReset();}
 
 /* 계열 이름표와 구성표에 맞춘 이름 */
 const EL_OF={slash:'물리',blade:'물리',axe:'물리',bolt:'화염',meteor:'화염',zap:'번개',spear:'냉기',vine:'독',wave:'빛',storm:'물리',saw:'물리',shower:'화염',tring:'번개',frost:'냉기',plasma:'번개'};

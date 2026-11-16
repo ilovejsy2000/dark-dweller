@@ -49,7 +49,7 @@ function drawEnemy(e){
 function drawDrop(d){if(d.wait>0)return;const big=d.it.gi>=3,bobv=d.landed?Math.sin(d.t*3+d.seed)*(big?2.5:1):0;
   ctx.fillStyle='rgba(8,8,20,.38)';ell(ctx,d.x,d.y+3,big?12:8,big?4.2:2.8);ctx.fill();
   ctx.save();ctx.translate(d.x,d.y-(big?15:10)-d.z-bobv);if(!d.landed)ctx.rotate(d.t*14);if(!big)ctx.globalAlpha=.9;drawGearAt(ctx,d.it,big?36:24);ctx.restore();}
-function drawHeroWorld(){if(P.dead)return;const blink=P.inv>0&&(clock*22|0)%2===0;ctx.fillStyle='rgba(8,8,20,.42)';ell(ctx,P.x,P.y+2,15,5.5);ctx.fill();if(blink)return;
+function drawHeroWorld(){if(P.dead){drawHeroDeath();return;}const blink=P.inv>0&&(clock*22|0)%2===0;ctx.fillStyle='rgba(8,8,20,.42)';ell(ctx,P.x,P.y+2,15,5.5);ctx.fill();if(blink)return;
   ctx.save();ctx.translate(P.x,P.y);ctx.scale(P.dir,1);drawHero(ctx,{t:clock,move:P.move,swing:P.swing});ctx.restore();}
 function strokeSegs(segs){ctx.beginPath();segs.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();}
 function strokeZap(z){strokeSegs(z.segs);for(const b of z.br)strokeSegs(b);}
@@ -100,7 +100,7 @@ function render(dt){
   dl.sort((a,b)=>a.y-b.y);
   for(const o of dl){switch(o.kind){
     case'enemy':drawEnemy(o);break;
-    case'prop':ctx.fillStyle='rgba(8,8,20,.36)';ell(ctx,o.x,o.y+2,o.sp.w*.3,o.sp.w*.1);ctx.fill();blit(o.sp,o.x,o.y,o.flip,1);if(o.pk==='crystal')lights.push([o.x,o.y-26,125+Math.sin(clock*2+o.x)*8,.7]);break;
+    case'prop':ctx.fillStyle='rgba(8,8,20,.36)';ell(ctx,o.x,o.y+2,o.sp.w*.3,o.sp.w*.1);ctx.fill();blit(o.sp,o.x,o.y,o.flip,1);if(o.pk==='crystal'||o.pk==='glow'||o.pk==='stump')lights.push([o.x,o.y-26,125+Math.sin(clock*2+o.x)*8,.7]);break;
     case'drop':drawDrop(o);break;
     case'ally':drawAlly(o);break;
     case'chest':drawChest(o);break;
@@ -145,7 +145,7 @@ function render(dt){
   for(const mt of meteors){if(mt.t>.75)continue;const hgt=mt.t/.75*560,x=mt.x+hgt*.25,y=mt.y-hgt,ux=.243,uy=-.97;
     poly(ctx,[[x-14,y+3],[x+ux*96,y+uy*96],[x+14,y-6]]);inkF(ctx,'#ff7a2f',3);poly(ctx,[[x-7,y+1],[x+ux*60,y+uy*60],[x+7,y-4]]);ctx.fillStyle='#ffe08a';ctx.fill();
     blitR(sprMeteor,x,y,clock*6,1.1);lights.push([x,y,130,.85]);if(dt>0&&Math.random()<.6)ember(x,y-6,1,8,30);}
-  render2fx();renderWorldFx();renderRelic();metaFx();skill3Fx();
+  render2fx();renderWorldFx();renderRelic();metaFx();skill3Fx();pickFx();
   // 번개 먹선·파동 먹선
   for(const z of zaps){ctx.lineWidth=z.big?13:9;ctx.strokeStyle=INK;strokeZap(z);}
   for(const w of waves){const a=1-w.r/w.R;if(!w.zap)taijiDisc(w.x,w.y,w.r*.92,w.r*.006+clock*2,.62*Math.sqrt(a)); // 태극권
@@ -208,8 +208,10 @@ function render(dt){
   ctx.setTransform(DPR,0,0,DPR,0,0);
   for(const m of motes){m.y-=m.v*dt*6;m.p+=dt;if(m.y<-.02){m.y=1.02;m.x=Math.random();}ctx.fillStyle=burn?`rgba(255,190,110,${.3+.2*Math.sin(m.p*1.7)})`:`rgba(220,230,255,${.16+.12*Math.sin(m.p*1.7)})`;ell(ctx,(m.x+Math.sin(m.p*.6)*.01)*W,m.y*H,m.s,m.s);ctx.fill();}
   const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.35,W/2,H/2,Math.hypot(W,H)*.62);vg.addColorStop(0,'rgba(6,7,20,0)');vg.addColorStop(1,`rgba(${6+52*bm|0},${7-3*bm|0},${20-6*bm|0},${.62+.12*bm})`);ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
-  if(P.inv>.25&&state==='play'){ctx.fillStyle=`rgba(226,80,76,${(P.inv-.25)*.7})`;ctx.fillRect(0,0,W,H);}
+  if(P.hurtT>0&&state==='play'){ctx.fillStyle=`rgba(226,80,76,${P.hurtT*.6})`;ctx.fillRect(0,0,W,H);P.hurtT-=dt;} /* 11-16: 무적 시간(부활·레벨업 뒤)에 화면이 통째로 빨갛던 것 */
+  if(state==='play'&&!P.dead&&P.hp<P.maxhp*.3){const q=.5+.5*Math.sin(clock*7),g2=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.hypot(W,H)*.6);g2.addColorStop(0,'rgba(200,30,40,0)');g2.addColorStop(1,`rgba(200,30,40,${.22+.2*q})`);ctx.fillStyle=g2;ctx.fillRect(0,0,W,H);
+    if(dt>0&&CFG.snd&&can('hb',900))try{const t=AC.currentTime;drumKick(t,.5);drumKick(t+.17,.3);}catch(_){}} /* 체력 30% 아래: 붉은 테두리와 심장 소리 */
   if(joy){ctx.lineWidth=3;ctx.strokeStyle='rgba(243,230,200,.5)';ell(ctx,joy.x0,joy.y0,46,46);ctx.stroke();const dx=joy.x-joy.x0,dy=joy.y-joy.y0,d=Math.hypot(dx,dy)||1,m=Math.min(46,d);ell(ctx,joy.x0+dx/d*m,joy.y0+dy/d*m,19,19);ctx.fillStyle='rgba(243,230,200,.75)';ctx.fill();ctx.strokeStyle=INK;ctx.stroke();}
-  gimScreen();drawMinimap();
+  gimScreen();guideArrows(tx,ty);drawMinimap();
   if(CFG.fps){ctx.font='700 12px "Noto Sans KR",sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillStyle='rgba(243,230,200,.8)';ctx.fillText(`${fpsNow} fps · 적 ${enemies.length}`,10,H-8);}
 }
