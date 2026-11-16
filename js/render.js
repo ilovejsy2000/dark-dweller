@@ -40,7 +40,7 @@ const lights=[];
 function drawEnemy(e){
   const T=e.T,f=(e.phase*NF|0)%NF,fuse=e.ai==='bomber'&&e.st===1,wind=(e.ai==='charge'||e.ai==='ogre')&&e.st===1;
   const white=e.flash>0||(fuse&&(clock*16|0)%2===0),sp=(white?T.white:T.frames)[f],h=e.hitT>0?e.hitT/.14:0;
-  let born=(e.age<.25?.35+.65*e.age/.25:1)*e.sc;if(fuse)born*=1+.3*(1-e.at/.8);
+  let born=(e.age<.25?.35+.65*e.age/.25:1)*e.sc*(e.vs||1);if(fuse)born*=1+.3*(1-e.at/.8);
   const fy=T.float?-10+Math.sin(clock*3+e.seed)*4:0,jx=wind?Math.sin(clock*70)*2.2:0;
   if(e.champ){ctx.fillStyle='rgba(226,80,76,.3)';ell(ctx,e.x,e.y+2,e.r*1.5,e.r*.6);ctx.fill();ctx.lineWidth=2.2;ctx.strokeStyle=`rgba(255,110,90,${.55+.3*Math.sin(clock*6+e.seed)})`;ctx.stroke();}
   ctx.fillStyle=e.slow>0||e.ice>0?'rgba(120,200,255,.42)':'rgba(8,8,20,.4)';ell(ctx,e.x,e.y+2,e.r*(T.float?.7:1),e.r*.36);ctx.fill();
@@ -204,10 +204,10 @@ function render(dt){
   // 타격 별·고리·숫자 (어둠 위에 또렷하게)
   for(const p of parts){if(p.k==='star'){const q=1-p.life/p.max;starPath(ctx,p.x,p.y,p.n,p.size*(.8+.5*q),p.size*.36,p.rot);if(p.size>18)inkF(ctx,p.col,p.size>40?3:2.2);else{ctx.globalAlpha=.85;ctx.fillStyle=p.col;ctx.fill();ctx.globalAlpha=1;}}
     else if(p.k==='ring'){const a=p.life/p.max;ctx.globalAlpha=a;ctx.beginPath();ctx.ellipse(p.x,p.y,p.r,p.r*.62,0,0,TAU);ctx.lineWidth=5*a+1.5;ctx.strokeStyle=INK;ctx.stroke();ctx.lineWidth=3*a+.5;ctx.strokeStyle=p.col;ctx.stroke();ctx.globalAlpha=1;}}
-  for(const e of enemies){if(!e.elite||e.boss)continue;const w=92,x=e.x-w/2,y=e.y-150;rr(ctx,x,y,w,11,4);inkF(ctx,'#0d0f1e',3);rr(ctx,x+2,y+2,Math.max(2,(w-4)*clamp(e.hp/e.maxhp,0,1)),7,3);ctx.fillStyle='#e2504c';ctx.fill();}
+  for(const e of enemies){if(!e.elite||e.boss)continue;const w=92,x=e.x-w/2,y=e.y-150*(e.vs||1);rr(ctx,x,y,w,11,4);inkF(ctx,'#0d0f1e',3);rr(ctx,x+2,y+2,Math.max(2,(w-4)*clamp(e.hp/e.maxhp,0,1)),7,3);ctx.fillStyle='#e2504c';ctx.fill();}
   ctx.textAlign='center';ctx.textBaseline='middle';
   for(const d of drops){if(!d.landed||d.it.gi<3)continue;const G=GRADES[d.it.gi];ctx.font='700 13px "Noto Sans KR","Malgun Gothic",sans-serif';ctx.lineWidth=4;ctx.strokeStyle=INK;ctx.strokeText(d.it.name,d.x,d.y-40);ctx.fillStyle=gradeColor(d.it);ctx.fillText(d.it.name,d.x,d.y-40);}
-  for(const p of parts)if(p.k==='num'){const age=p.max-p.life,sc=1+.6*Math.max(0,1-age/.1);ctx.globalAlpha=Math.min(1,p.life*4);ctx.font=`800 ${p.size*sc}px "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif`;ctx.lineWidth=p.size*.3;ctx.strokeStyle=INK;ctx.strokeText(p.txt,p.x,p.y);ctx.fillStyle=p.col;ctx.fillText(p.txt,p.x,p.y);}
+  for(const p of parts)if(p.k==='num'){const age=p.max-p.life,sc=1+.6*Math.max(0,1-age/.1);ctx.globalAlpha=Math.min(1,p.life*4)*(p.dmg?.62:1);ctx.font=`800 ${p.size*sc}px "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif`;ctx.lineWidth=p.size*(p.dmg?.2:.3);ctx.strokeStyle=p.dmg?'rgba(10,12,24,.7)':INK;ctx.strokeText(p.txt,p.x,p.y);ctx.fillStyle=p.col;ctx.fillText(p.txt,p.x,p.y);}
   ctx.globalAlpha=1;metaTop();
 
   // 화면 고정 효과

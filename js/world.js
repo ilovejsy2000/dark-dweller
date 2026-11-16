@@ -42,7 +42,7 @@ function drawChest(c){ctx.fillStyle='rgba(8,8,20,.4)';ell(ctx,c.x,c.y+2,22,7);ct
 /* 어둠이 덮이기 전: 잠든 수호자 표시 */
 function renderWorldFx(){
   for(const g of guards){if(!g.sleep)continue;lights.push([g.x,g.y-80,210,.55]);ctx.font='800 22px "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif';ctx.textAlign='center';
-    for(let i=0;i<3;i++){const q=((clock*.5+i/3)%1),x=g.x+34+q*26,y=g.y-g.T.art[2]*.78-q*44;ctx.globalAlpha=1-q;ctx.lineWidth=5;ctx.strokeStyle=INK;ctx.strokeText('Z',x,y);ctx.fillStyle='#d8f6ff';ctx.fillText('Z',x,y);}ctx.globalAlpha=1;}
+    for(let i=0;i<3;i++){const q=((clock*.5+i/3)%1),x=g.x+34*(g.vs||1)+q*26,y=g.y-g.T.art[2]*.78*(g.vs||1)-q*44;ctx.globalAlpha=1-q;ctx.lineWidth=5;ctx.strokeStyle=INK;ctx.strokeText('Z',x,y);ctx.fillStyle='#d8f6ff';ctx.fillText('Z',x,y);}ctx.globalAlpha=1;}
 }
 function renderWorldGlow(){for(const c of chests)glow(c.x,c.y-14,46,'rgb(255,210,120)',.4+.15*Math.sin(c.t*3));}
 /* 미니맵: 왼쪽 위. 주황 = 모닥불, 흰 점 = 나, 금빛 네모 = 보물 상자, 빨간 마름모 = 수호자, 주황 고리 = 나타난 보스, 등급 색 점 = 전설·신화 장비 */

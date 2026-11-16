@@ -1,7 +1,7 @@
 'use strict';
 /* 다크 드웰러 — 오래 붙잡는 장치(11-15 대표님 "중독성을 강화할 아이디어, 추천한 거 전부 넣어줘").
    ① 어둠 결정 + 특성(영구 성장: 져도 남는다) ② 보물 고블린 · 갈림길 제단(위험과 보상) · 상자 등급 룰렛
-   ③ 장비 분해(마력 가루) · 재련(한 줄 다시 굴리기, 나빠지지 않음) ④ 레벨업 희귀 선택지 · 다시 굴리기
+   ③ 장비 분해(마력 가루) · 재련(잠그지 않은 줄 다시 굴리기, 오르내림 · 2% 빛나는 재련 = 한 줄 최대 · 최대치 줄 잠금) ④ 레벨업 희귀 선택지 · 다시 굴리기
    ⑤ 판 안의 작은 임무 ⑥ 도감 ⑦ 오늘의 도전.
    드롭 확률(전설 1%·신화 0.5%)은 건드리지 않는다. 특별한 순간(고블린·제단·임무·상자)에만 보상을 몰아준다. */
 
@@ -43,12 +43,14 @@ function metaRunEnd(win){
   if(RUN.daily)du+=Math.floor(runT/60*6)+Math.floor(kills/40);
   const today=dayKey();
   /* 오늘의 도전 첫 클리어: 신화 장비 확정(창고가 꽉 차도 넣는다) + 결정 80 + 가루 150 */
-  if(RUN.daily&&win&&(!SAVE.daily||SAVE.daily.done!==today)){SAVE.daily={done:today};n+=80;du+=150;const it=makeItem(4,curFloor());if(!addLoot(it)){SAVE.stash.push(it);runLoot.push(it);cxGear(it);}RUN.dailyPrize=1;}
+  if(RUN.daily&&win&&(!SAVE.daily||SAVE.daily.done!==today)){SAVE.daily={done:today};
+    const bs=Math.floor(runT/60*4)+Math.floor(kills/50)+RUN.shardBonus,bd=Math.floor(runT/60*6)+Math.floor(kills/40)+(RUN.dustBonus||0); /* 한 판치 */
+    n=Math.max(200,bs*4);du=Math.max(400,bd*4);RUN.dailyX=4;const it=makeItem(4,curFloor());if(!addLoot(it)){SAVE.stash.push(it);runLoot.push(it);cxGear(it);}RUN.dailyPrize=1;}
   setTimeout(()=>{if(typeof rankAfterRun==='function')rankAfterRun(win);},0);
   RUN.shardGain=n;RUN.dustGain=du;SAVE.shard=(SAVE.shard||0)+n;SAVE.dust=(SAVE.dust||0)+du;SAVE.runs=(SAVE.runs||0)+1;
   if(RUN.newbie&&runT>120)for(let i=0;i<2;i++)addLoot(makeItem(rollGrade(1,lootBoost()+.5),curFloor())); // 4회차: 장비가 약한 동안 덤 장비
 }
-function metaResult(){const s=$('resSum');if(RUN.dustGain&&hardRun())s.textContent+=` · 마력 가루 +${RUN.dustGain}`;if(RUN.dailyPrize)s.textContent+=' · 오늘의 도전 보상: 신화 장비 + 결정 80 + 가루 150';}
+function metaResult(){const s=$('resSum');if(RUN.dustGain&&hardRun())s.textContent+=` · 마력 가루 +${RUN.dustGain}`;if(RUN.dailyPrize)s.textContent+=` · 오늘의 도전 보상: 신화 장비 + 결정·가루 4배(결정 ${RUN.shardGain} · 가루 ${RUN.dustGain})`;}
 
 /* ───── ② 보물 고블린 ───── */
 ET.tgob={...ET.goblin,art:['d',2,66],n:'보물 고블린',ai:'flee',r:16,hp:900,spd:128,dmg:0,xp:20,anim:3.4,kb:.5,harmless:true,tint:'rgba(255,196,40,.5)',light:110,deb:['#ffd56a','#c9962e','#fff0c2']};
@@ -154,20 +156,34 @@ function metaHud(h){const q=RUN.quest,t=q?`임무 · ${q.Q.txt(q)} · ${Math.cei
 /* 11-15 대표님 "재련에 드는 재료를 더, 분해로 얻는 재료는 더 적게": 가루 [1,3,8,25,60]→[1,2,4,10,25], 재련 [2,5,12,30,60]→[6,15,40,100,200], 굴릴 때마다 +25%→+40% */
 const DUST=[1,2,4,10,25],REF_COST=[6,15,40,100,200];
 const dustOf=it=>DUST[it.gi]*(it.prime?2:1);
-const refCost=it=>Math.round(REF_COST[it.gi]*(1+(it.rf||0)*.4));
-/* 한 줄을 다시 굴린다. 새 값이 더 낮으면 그대로 둔다(나빠지지 않음) */
-function refineLine(it,k){const c=refCost(it);if((SAVE.dust||0)<c)return null;SAVE.dust-=c;it.rf=(it.rf||0)+1;
-  const l=it.lines.find(x=>x.k===k),[a,b]=itemRange(it,k),nv=STAT[k].dec?Math.round((a+(b-a)*Math.random())*10)/10:Math.round(a+(b-a)*Math.random()),old=l.v;
-  if(nv>l.v)l.v=nv;recalc();saveNow();return{old,v:l.v,max:l.v>=b};}
-function openRefine(it,slot,msg){
-  const card=$('tipCard');card.innerHTML='';card.style.setProperty('--gc',gradeColor(it));describe(card,it);
-  card.append(el('div','fx',`재련 · 한 줄을 다시 굴립니다. 더 낮게 나오면 그대로 둡니다. 마력 가루 ${SAVE.dust||0} (한 번에 ${refCost(it)})`));
+/* 11-16 ② 대표님 "완벽 재련은 너무 쉽다 → 2% 확률로 빛이 나면서 한 줄만 최대로, 최대치가 된 줄만 잠글 수 있고, 나머지 재련은 좀 더 비싸게":
+   재련 = 잠기지 않은 줄을 모두 새로 굴린다(오르내림). 2%로 '빛나는 재련' — 잠기지 않은 줄 하나가 최대치가 된다.
+   최대치인 줄만 잠글 수 있고, 잠근 줄 하나마다 재련값이 60%씩 비싸진다(잠그면 그 줄은 안 바뀜) */
+const REF_GLOW=.02,REF_LOCK_COST=.6;
+const refLocked=it=>it.lines.filter(l=>l.lock).length;
+const refCost=it=>Math.round(REF_COST[it.gi]*(1+(it.rf||0)*.4)*(1+REF_LOCK_COST*refLocked(it)));
+function refLineMax(it,l){const[,b]=itemRange(it,l.k);return l.v>=b;}
+function refToggleLock(it,i){const l=it.lines[i];if(!l)return;if(l.lock)delete l.lock;else if(refLineMax(it,l))l.lock=1;saveNow();}
+function refineAll(it){const c=refCost(it);if((SAVE.dust||0)<c)return null;const free=it.lines.filter(l=>!l.lock);if(!free.length)return null;SAVE.dust-=c;it.rf=(it.rf||0)+1;
+  const old=it.lines.map(l=>({k:l.k,v:l.v})),q0=itemQuality(it),glow=Math.random()<REF_GLOW?pick(free):null;
+  for(const l of free){const[a,b]=itemRange(it,l.k);const v=l===glow?b:a+(b-a)*Math.random();l.v=STAT[l.k].dec?Math.round(v*10)/10:Math.round(v);}
+  recalc();saveNow();return{old,q0,q1:itemQuality(it),glow:glow?glow.k:null};}
+function openRefine(it,slot,msg,res){
+  const card=$('tipCard');card.innerHTML='';card.style.setProperty('--gc',gradeColor(it));
+  if(res&&res.glow){const j=el('div','rjack','빛나는 재련!');j.append(el('small',null,`${STAT[res.glow].n} 최대치`));card.append(j);}
+  describe(card,it);
+  if(res){const box=el('div','rres');box.append(el('b',null,`완성도 ${res.q0}% → ${res.q1}%`));box.lastChild.className=res.q1>res.q0?'up':res.q1<res.q0?'dn':'';
+    for(let i=0;i<it.lines.length;i++){const o=res.old[i],l=it.lines[i],d=l.v-o.v,r=el('div','rl'+(l.lock?' lk':d>0?' up':d<0?' dn':'')+(res.glow===l.k?' glow':''));
+      r.append(el('span',null,l.lock?`${fmtLine(l.k,l.v)} (잠금)`:`${fmtLine(l.k,o.v)} → ${fmtLine(l.k,l.v)}`),el('em',null,l.lock?'🔒':refLineMax(it,l)?'최대!':d>0?'▲':d<0?'▼':'='));box.append(r);}card.append(box);}
+  /* 줄 잠그기: 최대치인 줄만 */
+  const lk=el('div','rlock');lk.append(el('b',null,'최대치인 줄은 잠글 수 있습니다 (잠근 줄은 재련해도 안 바뀜, 한 줄마다 재련값 +60%)'));
+  it.lines.forEach((l,i)=>{const mx=refLineMax(it,l),b=btn(l.lock?`🔒 ${STAT[l.k].n}`:mx?`잠그기 · ${STAT[l.k].n}`:`${STAT[l.k].n}`,()=>{refToggleLock(it,i);SFX.ui();openRefine(it,slot,null,null);},'ghost sm'+(l.lock?' on':''));if(!mx&&!l.lock)b.disabled=true;lk.append(b);});
+  card.append(lk);
+  card.append(el('div','fx',`재련 · 잠그지 않은 줄을 모두 새로 굴립니다. 오를 수도, 내려갈 수도 있습니다. 아주 드물게(2%) 빛이 나며 한 줄이 최대치가 됩니다. 마력 가루 ${SAVE.dust||0}`));
   if(msg)card.append(el('div','fx rmsg',msg));
-  const row=el('div','btns');
-  for(const l of it.lines){const[,b]=itemRange(it,l.k),full=l.v>=b,bb=btn(full?`${STAT[l.k].n} 최대`:`${STAT[l.k].n} 굴리기`,()=>{const r=refineLine(it,l.k);if(!r){openRefine(it,slot,'마력 가루가 모자랍니다. 안 쓰는 장비를 분해하세요.');return;}
-      SFX.loot(r.v>r.old?Math.max(1,it.gi):1);openRefine(it,slot,r.v>r.old?`${fmtLine(l.k,r.old)} → ${fmtLine(l.k,r.v)}`+(r.max?' · 최대치!':''):'더 낮게 나와 그대로 두었습니다.');},'ghost sm');
-    if(full)bb.disabled=true;row.append(bb);}
-  row.append(btn('돌아가기',()=>{openTip(it,slot);},'ghost sm'));card.append(row);show('tip',true);
+  const allLocked=!it.lines.some(l=>!l.lock),row=el('div','btns'),go=btn(allLocked?'모든 줄이 잠겨 있습니다':`재련하기 · 가루 ${refCost(it)}`,()=>{const r=refineAll(it);if(!r){openRefine(it,slot,'마력 가루가 모자랍니다. 안 쓰는 장비를 분해하세요.');return;}
+    if(r.glow){SFX.win&&SFX.win();buzz(120);}else if(r.q1>r.q0)SFX.loot(Math.max(1,it.gi));else SFX.ui();openRefine(it,slot,null,r);},'go');
+  if(allLocked)go.disabled=true;row.append(go,btn('돌아가기',()=>{openTip(it,slot);},'ghost sm'));card.append(row);show('tip',true);
 }
 
 /* ───── ④ 희귀 선택지 ───── */
@@ -213,7 +229,7 @@ function metaLobbyRefresh(){
   $('talBtn').textContent=SAVE.shard?`특성 ${SAVE.shard}`:'특성';
   if(dailySel){show('modes',false);show('tierRow',false);$('modeLab').textContent='오늘의 규칙';$('riftBtn').setAttribute('aria-pressed',false);
     $('mapDesc').textContent=`${MAPS[p.map].k}에서 10분을 버티고 끝 보스를 잡으세요. `+p.mods.map(m=>`${m.n}: ${m.d}.`).join(' ');
-    const sh=SAVE.dailyShard===dayKey();$('best').textContent=done?'오늘 보상은 모두 받았습니다. 다시 하면 마력 가루만 얻습니다.':sh?'오늘 어둠 결정은 받았습니다. 깨면 신화 장비 1개 확정 + 결정 80 + 가루 150.':'깨면 신화 장비 1개 확정 + 어둠 결정 80 + 마력 가루 150. 첫 판은 버틴 만큼 결정도 얻습니다(하루 한 번).';}
+    const sh=SAVE.dailyShard===dayKey();$('best').textContent=done?'오늘 보상은 모두 받았습니다. 다시 하면 마력 가루만 얻습니다.':sh?'오늘 어둠 결정은 받았습니다. 깨면 신화 장비 1개 확정 + 이번 판 결정·가루 4배.':'깨면 신화 장비 1개 확정 + 이번 판 어둠 결정·마력 가루 4배(평소 3~5판치, 하루 한 번). 첫 판은 버틴 만큼 결정도 얻습니다.';}
 }
 const TAL_ICON={hp:'p_vigor',dmg:'p_might',def:'p_hide',regen:'p_regen',move:'p_swift',pick:'p_magnet',xp:'p_learn',cdr:'p_focus',crit:'p_keen',reroll:'p_luck',rare:'p_luck',revive:'golden',choice:'p_learn'};
 function renderTal(){const box=$('talList');box.innerHTML='';$('talShard').textContent=`어둠 결정 ${SAVE.shard||0} · 오늘의 도전·영겁의 굴레에서 얻습니다`;

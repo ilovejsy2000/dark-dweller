@@ -590,6 +590,17 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 .skc.on::after{content:'✓';position:absolute;top:3px;left:5px;font:900 11px var(--font-body);color:var(--teal1)}
 .rkav{width:26px;height:30px;object-fit:contain;margin-right:6px;vertical-align:middle}
 .rkrow .rknm{display:flex;align-items:center}
+/* 11-16 재련 결과 */
+.rres{display:grid;gap:3px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--edge);text-align:left}
+.rres b{font:800 14px var(--font-display);color:#e9edff}.rres b.up{color:#7dffb0}.rres b.dn{color:#ff8a9a}
+.rl{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:#c8cff0}.rl em{font-style:normal;font-weight:800}
+.rl.up em{color:#7dffb0}.rl.dn em{color:#ff8a9a}
+.rjack{display:grid;justify-items:center;gap:2px;padding:10px;border-radius:14px;font:900 26px var(--font-display);color:#2b1a00;background:linear-gradient(90deg,#ffd24a,#fff3b0,#ffb627);box-shadow:0 0 30px rgba(255,210,80,.7);animation:jackPop .6s cubic-bezier(.2,1.6,.4,1) both, jackGlow 1s ease-in-out .6s infinite alternate}
+.rjack small{font:800 12px var(--font-body);color:#5a3c00}
+@keyframes jackPop{from{transform:scale(.3);opacity:0}}@keyframes jackGlow{to{box-shadow:0 0 50px rgba(255,220,100,1)}}
+.rlock{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}.rlock b{width:100%;font:700 11.5px var(--font-body);color:#a9b6e2;text-align:center}
+.rlock .ghost.on{color:#2b1a00;background:var(--goldbtn);border-color:transparent}
+.rl.lk{color:#ffd862}.rl.glow{color:#fff3b0;text-shadow:0 0 10px rgba(255,210,80,.8)}
 </style>
 
 <div id="game">
@@ -800,5 +811,5 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 <script src="js/music.js"></script>
 <script src="js/main.js"></script>
 
-<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160527';</script>
+<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160741';</script>
 </html>

@@ -21,7 +21,7 @@ function importSave(code){
 
 /* ───── 장비 ───── */
 function rollType(){let t=0;for(const k in SLOT_TYPES)t+=SLOT_TYPES[k].w;let r=Math.random()*t;for(const k in SLOT_TYPES){r-=SLOT_TYPES[k].w;if(r<=0)return k;}return'ring';}
-function rollGrade(min,boost){const pool=GRADES.map((g,i)=>i<min?0:g.w*(i===2?boost:i>=3?Math.min(2.5,1+(boost-1)*.2):1));let r=Math.random()*pool.reduce((a,b)=>a+b,0);for(let i=0;i<pool.length;i++){r-=pool[i];if(r<=0)return i;}return min;}
+function rollGrade(min,boost){const pool=GRADES.map((g,i)=>i<min?0:g.w*(i===2?boost:i>=3?Math.min(2.5,1+(boost-1)*.2)*(i===4?(MAP.myth||1):1):1)); /* MAP.myth: 그 맵의 신화 배수(11-16) */let r=Math.random()*pool.reduce((a,b)=>a+b,0);for(let i=0;i<pool.length;i++){r-=pool[i];if(r<=0)return i;}return min;}
 function rollLine(k,gi,floor){const[a,b]=lineRange(k,gi),v=a+(b-a)*(floor+(1-floor)*Math.random());return STAT[k].dec?Math.round(v*10)/10:Math.round(v);}
 /* floor: 굴림 바닥값(0~0.6). 높을수록 최대치에 가깝게 나온다 */
 function makeItem(gi,floor,type){
@@ -86,7 +86,7 @@ function thinOut(){const small=enemies.filter(e=>!e.dead&&!e.elite&&!e.boss).sor
 /* ───── 효과 ───── */
 function addP(o){if(parts.length<560)parts.push(o);}
 const fmtNum=n=>n>=1e4?(n/1e4).toFixed(1)+'만':String(n);
-function numFx(x,y,n,crit){if(!crit&&parts.length>220)return;addP({k:'num',x,y,vy:-52,txt:fmtNum(n),col:crit?'#ffd94a':'#f3e6c8',size:crit?23:14,life:crit?.7:.42,max:crit?.7:.42});}
+function numFx(x,y,n,crit){if(!crit&&parts.length>220)return;addP({k:'num',dmg:1,x,y,vy:-52,txt:fmtNum(n),col:crit?'#eef1f8':'#c3c8d6',size:crit?18:12,life:crit?.6:.4,max:crit?.6:.4});} /* 피해 숫자: 회색·반투명(11-16) */
 function textFx(x,y,txt,col){addP({k:'num',x,y,vy:-46,txt,col:col||'#9fe8ff',size:20,life:.8,max:.8});}
 function starFx(x,y,size,col){addP({k:'star',x,y,rot:Math.random()*TAU,size,col:col||'#ffe066',n:4+(Math.random()*3|0),life:.1,max:.1});}
 function debris(x,y,cols,n,pow){for(let i=0;i<n;i++){const a=Math.random()*TAU,v=rand(40,150)*pow;addP({k:'deb',x,y,z:rand(8,22),vx:Math.cos(a)*v,vy:Math.sin(a)*v*.6,vz:rand(120,260)*pow,rot:Math.random()*TAU,vr:rand(-9,9),size:rand(3.5,7),col:pick(cols),life:rand(.7,1.2)});}}
@@ -153,7 +153,7 @@ function killEnemy(e){
   if(big){buzz(e.boss?80:40);shake(e.boss?.9:.5);freeze=Math.max(freeze,e.boss?.25:.1);flash(e.x,e.y-40,420,.4);SFX.boom();
     const cnt=e.guard?0:e.boss?1:(RUN.newbie||Math.random()<.6?1:0); /* 11-15 대표님 "아이템 나오는 양을 줄여": 보스 2→1, 정예 1→60% */for(let i=0;i<cnt;i++)dropItem(e.x,e.y,rollGrade(e.boss?2:1,lootBoost()+(e.boss?1.5:.5)),i*.09);
     if(e.boss===2)winRun();
-  }else{SFX.kill();if(can('kp',70))shake(.035);if(Math.random()<(e.champ?.06:T.loot||.007)*(1+ST.luck/100)*(burnT>0?2:1)*(1+.3*(FX.golden||0)))dropItem(e.x,e.y,rollGrade(e.champ?1:0,lootBoost()),0);}
+  }else{SFX.kill();if(can('kp',70))shake(.035);if(Math.random()<(e.champ?.03:T.loot||.004)*(1+ST.luck/100)*(burnT>0?2:1)*(1+.3*(FX.golden||0)))dropItem(e.x,e.y,Math.min(2,rollGrade(e.champ?1:0,lootBoost())),0);} /* 11-16 성장 속도: 잡몹 드롭 .007→.004(강화 적 .06→.03), 잡몹은 유니크까지만 */
 }
 function dropItem(x,y,gi,delay){const a=Math.random()*TAU;drops.push({kind:'drop',it:makeItem(gi,curFloor()),x,y,z:0,vx:Math.cos(a)*rand(50,110),vy:Math.sin(a)*rand(30,70),vz:rand(280,360),wait:delay,landed:false,t:0,seed:Math.random()*9});}
 function addLoot(it){if(SAVE.stash.length>=STASH_MAX)return false;SAVE.stash.push(it);runLoot.push(it);cxGear(it);return true;}
@@ -182,7 +182,7 @@ function spawn(type,o){
   /* 강화된 적: 시간이 갈수록, 어려운 맵일수록 자주 섞여 나온다(크고 붉은 기운, 체력 4배·공격 1.5배, 장비를 잘 떨어뜨림) */
   const champ=!T.elite&&!o.sc&&Math.random()<DIFF.champ(m)+MAP.champ,sc=o.sc||(champ?1.35:1),rad=(runT<25?viewRad()*.72:viewRad()+80)+(sc>1?60:0); // 처음 25초는 화면 가장자리 안쪽에서 나와 바로 싸움이 붙는다
   const e={kind:'enemy',T,type,ai:T.ai||'chase',x:o.at?o.at[0]:P.x+Math.cos(a)*rad,y:o.at?o.at[1]:P.y+Math.sin(a)*rad*.85,kx:0,ky:0,
-    hp:T.hp*DIFF.hp(m)*MAP.hp*RUN.ehp*(o.hpMul||1)*(champ?4:1)*(o.boss?Math.sqrt(ADAPT):ADAPT),dmg:T.dmg*DIFF.dmg(m)*MAP.dmg*RUN.edmg*(o.dmgMul||1)*(champ?1.5:1),xp:Math.ceil(T.xp*DIFF.xp(m)*(champ?4:1)),r:T.r*sc,sc,sm:DIFF.spd(m),champ,
+    hp:T.hp*DIFF.hp(m)*MAP.hp*RUN.ehp*(o.hpMul||1)*(champ?4:1)*(o.boss?Math.sqrt(ADAPT):ADAPT),dmg:T.dmg*DIFF.dmg(m)*MAP.dmg*RUN.edmg*(o.dmgMul||1)*(champ?1.5:1),xp:Math.ceil(T.xp*DIFF.xp(m)*(champ?4:1)),r:T.r*sc*(o.boss?.7:T.elite?.6:.5),vs:o.boss?.7:T.elite?.6:.5,sc, /* 11-16 대표님 "적 크기 약 50%": 반지름·그림 잡몹 0.5, 정예 0.6, 보스 0.7 */sm:DIFF.spd(m),champ,
     flash:0,hitT:0,slow:0,stun:0,ice:0,weak:0,bt:0,bt2:0,ovT:0,dotT:0,dps:0,dotK:'fire',dotAcc:0,st:0,at:rand(1.5,4),at2:6,cx:0,cy:0,sx:0,sy:0,
     phase:Math.random(),dir:1,age:0,seed:Math.random()*9,dead:false,boss:o.boss||0,elite:!!T.elite,name:o.name||T.n,def:T.def||0,mres:T.mres||0,pst:0,rage:0,fade:0,lane:0};
   if(!o.at&&Math.hypot(e.x,e.y/.85)>WORLD_R-60){e.x=2*P.x-e.x;e.y=2*P.y-e.y;}if(!o.at)keepIn(e,60);
@@ -403,8 +403,8 @@ function update(dt){
     /* 보스전: 보스가 나온 뒤 45초는 잔챙이를 크게 줄이고(11-14 대표님 "보스전 때 잔챙이가 너무 많아"), 그 뒤 1분에 걸쳐 원래대로 돌린다.
        보스를 오래 못 잡아도 경험치가 끊기지 않게 하려는 것 */
     if(bossRef!==lastBoss){lastBoss=bossRef;bossSince=runT;}
-    const bossOn=!!(bossRef&&!bossRef.dead&&!bossRef.sleep),bt=runT-bossSince,calm=bossOn&&bt<60,bk2=bossOn?(bt<45?.3:Math.min(1,.3+(bt-45)/60*.7)):1;
-    const cap=Math.min(DIFF.cap(m),W<700?290:420)*Math.max(.35,bk2);spawnAcc+=dt*DIFF.spawn(m)*DIFF.pace(runT)*MAP.spawn*RUN.spawn*(hordeT>0?2.5:1)*(burnT>0?1.6:1)*bk2;
+    const bossOn=!!(bossRef&&!bossRef.dead&&!bossRef.sleep),bt=runT-bossSince,calm=bossOn&&bt<60,bk2=bossOn?.3:1; /* 11-16 대표님 "보스 중엔 잡몹 적게": 보스가 살아 있는 내내 등장 0.3배·동시 한도 0.35배 */
+    const cap=Math.min(DIFF.cap(m),W<700?180:240) /* 11-16 화면에 쌓이는 적 한도: 폰 290→180 */*Math.max(.35,bk2);spawnAcc+=dt*DIFF.spawn(m)*DIFF.pace(runT)*MAP.spawn*RUN.spawn*(hordeT>0?2.5:1)*(burnT>0?1.6:1)*bk2;
     while(spawnAcc>=1){const t=pickSpawn(m);spawnAcc-=ET[t].cost||1;if(enemies.length<cap){const e=spawn(t);for(let k=1;k<(e.T.pack||1);k++)spawn(t,{at:[e.x+rand(-46,46),e.y+rand(-46,46)]});}} // pack: 떼로 나오는 적
     if(runT>=nextElite){nextElite+=ELITE_EVERY*RUN.eliteEvery;if(!calm&&enemies.filter(e=>e.elite&&!e.boss&&!e.dead).length<4)spawn(eliteKind(m));} /* 2회차: 정예는 동시에 4마리까지(못 잡으면 화면을 덮던 것) */
     if(!miniDone&&runT>=MINI_HORDE){miniDone=true;uiBanner('작은 무리');const n=16,rad=viewRad()+30;for(let i=0;i<n;i++){const a=i/n*TAU;spawn('moss',{at:[P.x+Math.cos(a)*rad,P.y+Math.sin(a)*rad*.85]});}}

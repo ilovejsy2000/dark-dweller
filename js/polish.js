@@ -89,7 +89,7 @@ function adaptReset(){ADAPT=1;adaptHist=[];adaptT=0;}
 function adaptTick(dt){if(state!=='play'||ending||rift)return;adaptT-=dt;if(adaptT>0)return;adaptT=5;
   adaptHist.push({t:runT,k:kills});if(adaptHist.length>5)adaptHist.shift();if(runT<40||adaptHist.length<4)return;
   const h=adaptHist[0],rate=(kills-h.k)/Math.max(1,runT-h.t),want=2+.35*runT/60;
-  if(rate<want*.6)ADAPT=Math.max(.3,ADAPT*.92);else if(rate>want*1.3)ADAPT=Math.min(1.8,ADAPT*1.05);}
+  if(rate<want*.6)ADAPT=Math.max(.3,ADAPT*.92);else if(rate>want*1.3)ADAPT=Math.min(1.15,ADAPT*1.05);} /* 11-16: 상한 1.8 → 1.15(잘 잡을수록 체력이 계속 불어나 쌓이던 것) */
 
 /* ───── 좋은 장비 한 번에 끼기(3회차): 칸마다 창고에서 점수가 가장 높은 것을 낀다 ───── */
 function bestFor(type){let b=null;for(const it of SAVE.stash)if(it.t===type&&(!b||itemScore(it)>itemScore(b)))b=it;return b;}
