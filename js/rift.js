@@ -5,7 +5,8 @@
    맵(땅·기믹)은 네 곳 가운데 하나를 무작위로 고르고, 적의 세기·보상은 단계로 정한다. */
 const RIFT_T=600; // 제한 시간(초)
 let rift=null,riftSel=false,riftTier=1;
-const riftOpen=()=>['심연·클리어','심연·30분','심연·1시간'].some(k=>SAVE.best[k]&&SAVE.best[k].win);
+const RIFT_TEST_OPEN=true; /* 11-16 대표님 "굴레 바로 열어줘 테스트해보게" — 출시 전 false로(출시 할 일 목록) */
+const riftOpen=()=>RIFT_TEST_OPEN||['심연·클리어','심연·30분','심연·1시간'].some(k=>SAVE.best[k]&&SAVE.best[k].win);
 const riftMax=()=>Math.max(1,(SAVE.rift&&SAVE.rift.open)||1);
 /* 단계마다 적 체력 ×1.17, 공격 ×1.09. 1단계도 서리 폐허쯤 */
 function riftMap(tier,mi){const B=MAPS[mi];return Object.assign({},B,{k:'영겁의 굴레',base:mi,rift:1,hp:2.6*Math.pow(1.17,tier-1),dmg:1.5*Math.pow(1.09,tier-1),spawn:1.15,

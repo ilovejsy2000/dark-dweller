@@ -5,7 +5,7 @@
 /* ───── 시작 화면: 처음 켤 때 한 번. 누르면 동굴로 걸어 들어온다 ───── */
 let titleOn=true;
 function titleInit(){
-  $('title').addEventListener('click',()=>{if(!titleOn)return;titleOn=false;soundOn();SFX.ui();show('title',false);hubArrive();});
+  $('title').addEventListener('click',()=>{if(!titleOn||!$('nick').hidden)return;soundOn();SFX.ui();nickGate(()=>{titleOn=false;show('title',false);hubArrive();});}); /* 11-16: 처음이면 닉네임부터 */
 }
 
 /* ───── 첫 판 조작 안내: 끌어서 움직이기 ───── */

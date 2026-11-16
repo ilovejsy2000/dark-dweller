@@ -136,10 +136,13 @@ function render(dt){
     else{const rr0=s.r;ctx.globalAlpha=Math.min(1,s.life*4);ctx.beginPath();ctx.arc(-rr0*.6,0,rr0,-1.1,1.1);ctx.arc(-rr0*.95,0,rr0*1.05,.85,-.85,true);ctx.closePath();inkF(ctx,'#fff6dc',3);ctx.globalAlpha=1;}
     ctx.restore();lights.push([s.x,s.y,70,.6]);}
   // 베기 자국
-  for(const s of slashes){const q=1-s.life/s.max,R0=s.R*.88*(.8+.3*q),sw=1.2;ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.a);ctx.globalAlpha=1-q*q;
-    ctx.beginPath();ctx.arc(0,0,R0,-sw,sw);ctx.arc(-R0*.36,0,R0*1.03,sw*.78,-sw*.78,true);ctx.closePath();inkF(ctx,'#fff6dc',3.5);
-    ctx.lineWidth=4.5;ctx.strokeStyle='#9fe8ff';ctx.beginPath();ctx.arc(0,0,R0*.965,-sw*.82,sw*.82);ctx.stroke();
-    ctx.lineWidth=2.4;ctx.strokeStyle=INK;ctx.beginPath();ctx.arc(0,0,R0+9,-sw*.55,sw*.2);ctx.stroke();ctx.restore();}
+  /* 11-16 대표님 "기본 검술이 너무 두꺼워, 칼질하듯이": 가는 칼날 자국이 한쪽에서 반대쪽으로 그어지고 꼬리부터 사라진다 */
+  for(const s of slashes){const q=1-s.life/s.max,R0=s.R*.9,sw=1.15,a1=-sw+2*sw*Math.min(1,q/.38),a0=-sw+2*sw*Math.max(0,(q-.3)/.7),th=Math.max(3,s.R*.07)*(1-q*.5);
+    if(a1-a0<.04)continue;ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.a);ctx.globalAlpha=1-q*q*.7;const N=18;
+    ctx.beginPath();for(let i=0;i<=N;i++){const an=a0+(a1-a0)*i/N;ctx.lineTo(Math.cos(an)*R0,Math.sin(an)*R0);}
+    for(let i=N;i>=0;i--){const t=i/N,an=a0+(a1-a0)*t,w=th*Math.pow(t,1.3)*Math.min(1,(1-t)/.1+.15);ctx.lineTo(Math.cos(an)*(R0-w),Math.sin(an)*(R0-w));}
+    ctx.closePath();ctx.fillStyle='#ffffff';ctx.fill();ctx.lineWidth=1.3;ctx.strokeStyle='rgba(120,215,255,.95)';ctx.stroke();
+    ctx.lineWidth=1;ctx.strokeStyle='rgba(170,235,255,.45)';ctx.beginPath();ctx.arc(0,0,R0+3.5,a0+(a1-a0)*.35,a1);ctx.stroke();ctx.restore();}
   ctx.globalAlpha=1;
   // 불씨탄
   for(const b of bolts){const a=Math.atan2(b.vy,b.vx),k=b.mini?.62:1;ctx.save();ctx.translate(b.x,b.y);ctx.rotate(a);ctx.scale(k,k);
@@ -187,7 +190,7 @@ function render(dt){
   for(const a of axes)glow(a.x,a.y,30*a.size,'rgb(200,215,255)',.3);
   for(const mt of meteors){if(mt.t>.75)continue;const hgt=mt.t/.75*560;glow(mt.x+hgt*.25,mt.y-hgt,70,'rgb(255,140,50)',.7);}
   for(const z of zones)if(z.k==='fire')glow(z.x,z.y-8,z.R*1.2,'rgb(255,120,40)',.3*Math.min(1,z.life*1.5));
-  for(const s of slashes){const q=1-s.life/s.max;ctx.globalAlpha=(1-q)*.5;ctx.lineWidth=24;ctx.strokeStyle='rgba(150,225,255,.6)';ctx.beginPath();ctx.arc(s.x,s.y,s.R*.84*(.8+.3*q),s.a-1.1,s.a+1.1);ctx.stroke();}
+  for(const s of slashes){const q=1-s.life/s.max,sw=1.15,a1=-sw+2*sw*Math.min(1,q/.38),a0=-sw+2*sw*Math.max(0,(q-.3)/.7);if(a1-a0<.04)continue;ctx.globalAlpha=(1-q)*.35;ctx.lineWidth=7;ctx.strokeStyle='rgba(150,225,255,.6)';ctx.beginPath();ctx.arc(s.x,s.y,s.R*.88,s.a+a0,s.a+a1);ctx.stroke();}
   for(const p of parts){if(p.k==='ember'){ctx.globalAlpha=Math.min(1,p.life*2);ctx.fillStyle=p.col;ell(ctx,p.x,p.y,p.size,p.size);ctx.fill();}
     else if(p.k==='pillar'){const a=p.life/p.max,gr=ctx.createLinearGradient(0,p.y,0,p.y-p.h);gr.addColorStop(0,p.col);gr.addColorStop(1,'rgba(0,0,0,0)');ctx.globalAlpha=a;ctx.fillStyle=gr;ctx.fillRect(p.x-p.w*(.6+.4*a),p.y-p.h,p.w*2*(.6+.4*a),p.h);}}
   ctx.globalAlpha=1;

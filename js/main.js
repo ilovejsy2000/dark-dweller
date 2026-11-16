@@ -29,6 +29,7 @@ window.addEventListener('pagehide',ddHide);
 function ddBack(){
   /* 5회차(11-15): 새 창들도 뒤로 가기로 닫힌다. 광고·부활·계약·레벨업은 고르기 전엔 앱이 내려가지 않게 막기만 */
   if(!$('adBox').hidden||!$('revive').hidden||!$('pact').hidden||(state==='play'&&choosing))return true;
+  if(!$('nick').hidden)return true;
   if(!$('match').hidden){$('matchCancel').click();return true;}
   if(!$('rank').hidden){show('rank',false);return true;}
   if(!$('skin').hidden){show('skin',false);return true;}

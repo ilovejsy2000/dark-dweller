@@ -609,6 +609,15 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 .mslot img{height:62px;object-fit:contain}.mslot b{font:800 12.5px var(--font-body);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.mslot small{font-size:10.5px;color:#9ea6c9}
 .mslot.me{border-color:rgba(69,240,218,.6)}.mslot.wait img{visibility:hidden}.mslot.wait b{color:#7f88b6;animation:tapPulse 1.2s ease-in-out infinite}
 .mslot.join{border-color:rgba(169,141,255,.55);animation:bestPop .45s cubic-bezier(.2,1.6,.4,1) both}.mslot.join small{color:#cdbfff}
+/* 11-16 겹쳐 뜨는 판: 화면보다 길면 위가 잘리지 않게(가운데 정렬 대신 위부터, 남는 자리는 auto 여백) · 카메라 자리 비우기 */
+.overlay:not(.full):not(.bottom){place-items:start center;grid-template-columns:minmax(0,1fr);padding-top:calc(var(--topsafe) + 14px)}
+.overlay:not(.full):not(.bottom)>.card{margin-block:auto}
+/* 순위 판: 화면 높이 안에 들어오고 목록만 굴러가게 */
+.rankcard{display:flex;flex-direction:column;gap:9px;max-height:calc(100dvh - var(--topsafe) - 30px)}
+.rankcard>*{flex:none}.rankcard .rklist{flex:1 1 auto;min-height:96px;max-height:none}
+.rankcard h2{margin:0}
+#nick{z-index:40}.nickcard{max-width:400px}
+.fx.off{opacity:.45}
 </style>
 
 <div id="game">
@@ -745,6 +754,17 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
     </div>
   </div>
 
+  <div id="nick" class="overlay" hidden>
+    <div class="card nickcard">
+      <div class="eyebrow">처음 오셨네요</div>
+      <h2 class="gold">닉네임을 정해 주세요</h2>
+      <p class="sub">순위표와 영겁의 굴레 동료에게 보이는 이름입니다. 2~12자, 한글·영문·숫자.</p>
+      <div class="rkjoin"><input id="nickName" maxlength="12" autocomplete="off" placeholder="닉네임" aria-label="닉네임"><button class="go sm" id="nickOk" type="button">시작</button></div>
+      <div id="nickMsg" class="rkmsg"></div>
+      <div class="btns" id="nickLaterBox" hidden><button class="ghost sm" id="nickLater" type="button">나중에 정하기</button></div>
+    </div>
+  </div>
+
   <div id="match" class="overlay" hidden>
     <div class="card matchcard">
       <div class="eyebrow">영겁의 굴레 · 함께하기</div>
@@ -812,6 +832,7 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 <script src="js/skills2.js"></script>
 <script src="js/skills3.js"></script>
 <script src="js/relics.js"></script>
+<script src="js/prime.js"></script>
 <script src="js/mobs.js"></script>
 <script src="js/world.js"></script>
 <script src="js/gimmick.js"></script>
@@ -829,5 +850,5 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 <script src="js/music.js"></script>
 <script src="js/main.js"></script>
 
-<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160822';</script>
+<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611161640';</script>
 </html>

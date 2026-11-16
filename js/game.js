@@ -52,7 +52,7 @@ function discardGrade(gi){for(const it of SAVE.stash)if(it.gi===gi)SAVE.dust=(SA
 let ST={},FX={},AREA=1;
 function recalc(){
   const s={dmg:0,aspd:0,crit:5,critd:150,hp:250,def:0,mres:0,move:0,pick:0,xp:0,luck:0,cdr:0,regen:0,area:0},fx={};
-  for(const[sk]of EQUIP_SLOTS){const it=SAVE.equip[sk];if(!it)continue;for(const l of it.lines)s[l.k]+=l.v;if(it.fx)fx[it.fx]=(fx[it.fx]||0)+1;}
+  for(const[sk]of EQUIP_SLOTS){const it=SAVE.equip[sk];if(!it)continue;for(const l of it.lines)s[l.k]+=l.v;for(const k of itemFxList(it))fx[k]=(fx[k]||0)+1;}
   if(state==='play')for(const id in P.pas){const p=PASSIVES[id];s[p.stat]+=p.v*P.pas[id];if(p.stat2)s[p.stat2]+=p.v2*P.pas[id];}
   talentApply(s);relicRecalc(s,fx);
   s.cdr=Math.min(35,s.cdr);s.move=clamp(s.move,-50,100);s.crit=Math.min(100,s.crit);s.mres=Math.min(75,s.mres);

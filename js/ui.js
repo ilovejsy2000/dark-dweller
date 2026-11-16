@@ -77,7 +77,7 @@ function uiBanner(txt){const b=$('banner');b.hidden=true;void b.offsetWidth;b.te
 function uiCine(name,fin){if(!name){show('cine',false);return;}$('cineSub').textContent=fin?'최종 보스':'보스 등장';$('cineName').textContent=name;show('cine',false);void $('cine').offsetWidth;show('cine',true);}
 function uiNote(txt){const n=$('note');n.textContent=txt;n.hidden=false;clearTimeout(uiNote.t);uiNote.t=setTimeout(()=>{n.hidden=true;},2200);}
 function uiToast(it){const t=el('div','toast');t.style.setProperty('--gc',gradeColor(it));
-  const b=el('b',null,`${gradeName(it)} · ${it.name}`);t.append(b,el('span',null,it.lines.map(l=>fmtLine(l.k,l.v)).join(' · ')+(it.fx?' · '+FXS[it.fx]:'')));
+  const b=el('b',null,`${gradeName(it)} · ${it.name}`);t.append(b,el('span',null,it.lines.map(l=>fmtLine(l.k,l.v)).join(' · ')+(itemFxText(it)?' · '+itemFxText(it):'')));
   const box=$('toasts');box.append(t);while(box.children.length>3)box.firstChild.remove();setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.remove(),520);},2800);}
 
 /* ───── 거점: 맵과 시간 고르기 ───── */
@@ -146,7 +146,7 @@ function describe(box,it){const G={c:gradeColor(it),k:gradeName(it)},hd=el('div'
   for(const l of it.lines){const[a,b]=itemRange(it,l.k),full=l.v>=b,row=el('div','ln');row.style.setProperty('--gc',G.c);
     const bar=el('div','lbar'),fill=el('i');fill.style.width=(b>a?clamp((l.v-a)/(b-a),0,1)*100:100)+'%';bar.append(fill);
     row.append(el('span',null,fmtLine(l.k,l.v)),el('span','mx'+(full?' full':''),full?'최대치':`최대 ${fmtVal(l.k,b)}`),bar);box.append(row);}
-  if(it.fx)box.append(el('div','fx','고유 효과 · '+FXS[it.fx]));
+  for(const[lab,k,on]of itemFxRows(it))if(FXS[k])box.append(el('div','fx'+(on?'':' off'),`${lab} · ${FXS[k]}`+(on?'':' (초월로 나오면 열림)')));
   const si=setInfo(it);if(si){const sb=el('div','setb');sb.append(el('div','st',`세트 · ${si.name} (${si.n}개 착용)`));for(const[t,on]of si.rows)sb.append(el('div',on?'on':null,t));box.append(sb);}}
 /* 설명 창: 창고 장비면 장착·버리기, 낀 장비면 해제 */
 function openTip(it,slot){
@@ -155,7 +155,7 @@ function openTip(it,slot){
   if(slot){row.append(btn('재련',()=>{SFX.ui();openRefine(it,slot);},'ghost'));row.append(btn('해제',()=>{if(unequipSlot(slot)){show('tip',false);renderInv();}else card.append(el('div','fx','창고가 가득 차서 해제할 수 없습니다.'));},'go sm'));}
   else{const ts=targetSlot(it.t,tipPrefer),old=SAVE.equip[ts];
     row.append(btn('장착',()=>{equipItem(it,ts);SFX.loot(Math.max(1,it.gi));show('tip',false);renderInv();},'go sm'),btn('재련',()=>{SFX.ui();openRefine(it,null);},'ghost'),confirmBtn(`분해 (가루 +${dustOf(it)})`,()=>{discardItem(it);show('tip',false);renderInv();}));
-    if(old){const c=el('div','cmp');c.append(el('div','ct',`지금 낀 것 · ${gradeName(old)} ${old.name}`));for(const l of old.lines)c.append(el('div',null,fmtLine(l.k,l.v)));if(old.fx)c.append(el('div',null,'고유 효과 · '+FXS[old.fx]));card.append(c);}}
+    if(old){const c=el('div','cmp');c.append(el('div','ct',`지금 낀 것 · ${gradeName(old)} ${old.name}`));for(const l of old.lines)c.append(el('div',null,fmtLine(l.k,l.v)));if(itemFxText(old))c.append(el('div',null,'효과 · '+itemFxText(old)));card.append(c);}}
   if(invFrom==='pause'){for(const b of[...row.children])if(/재련|분해/.test(b.textContent))b.remove();card.append(el('div','fx','재련·분해는 야영지의 대장간에서 할 수 있습니다.'));}
   row.append(btn('닫기',()=>show('tip',false)));card.append(row);show('tip',true);
 }
@@ -180,7 +180,7 @@ function renderBulk(){const box=$('bulk');box.innerHTML='';if(invFrom==='pause')
 function renderStats(){const box=$('statList');box.innerHTML='';
   const val=k=>{const v=ST[k],s=STAT[k];if(k==='hp'||k==='def'||k==='luck')return String(Math.round(v));if(k==='regen')return v.toFixed(1)+'/초';if(k==='crit'||k==='critd'||k==='mres')return Math.round(v)+'%';return (s.neg?'-':'+')+Math.round(v)+'%';};
   for(const k of STAT_ORDER){const r=el('div');r.append(el('span',null,STAT[k].n),el('span',null,val(k)));box.append(r);}
-  for(const k in SETN){if(!SETS[k]||SETN[k]<2)continue;const r=el('div','setrow');r.append(el('span',null,`${SETS[k].n} ${SETN[k]}세트`),el('span',null,SETS[k].b.slice(0,SETN[k]-1).join(' · ')));box.append(r);}}
+  for(const k in SETN){if(!SETS[k]||!SETN[k])continue;const on=SETN[k]>=SET_NEED;const r=el('div','setrow');r.append(el('span',null,`${SETS[k].k} ${SETN[k]}/${SET_NEED}`),el('span',null,on?SETS[k].b:`${SET_NEED-SETN[k]}개 더 끼면 열림`));box.append(r);}}
 function renderInv(){
   const doll=$('doll');doll.innerHTML='';
   for(const[sk,type]of EQUIP_SLOTS){const it=SAVE.equip[sk],c=cellFor(it),pos=DOLL[sk];c.id='eq-'+sk;c.style.gridColumn=pos[0];c.style.gridRow=pos[1];
@@ -205,7 +205,7 @@ function uiResult(win){
   metaResult();
   const g=$('resLoot');g.innerHTML='';$('resDetail').textContent=runLoot.length?'장비를 누르면 내용이 보입니다. 모두 창고에 들어갔습니다.':'';
   for(const it of runLoot.slice().sort((a,b)=>b.gi-a.gi||itemQuality(b)-itemQuality(a))){const c=cellFor(it);
-    c.addEventListener('click',()=>{$('resDetail').textContent=`${gradeName(it)} · ${it.name} (완성도 ${itemQuality(it)}%) — `+it.lines.map(l=>fmtLine(l.k,l.v)).join(' · ')+(it.fx?' · 고유 효과: '+FXS[it.fx]:'');});g.append(c);}
+    c.addEventListener('click',()=>{$('resDetail').textContent=`${gradeName(it)} · ${it.name} (완성도 ${itemQuality(it)}%) — `+it.lines.map(l=>fmtLine(l.k,l.v)).join(' · ')+(itemFxText(it)?' · 효과: '+itemFxText(it):'');});g.append(c);}
   resultExtra(win);show('result',true);
 }
 

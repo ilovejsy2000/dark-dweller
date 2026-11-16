@@ -29,6 +29,7 @@ function rankAfterRun(win){if(!rankMe)return;const r=(typeof rift!=='undefined'&
 
 /* ───── 화면 ───── */
 function rankInit(){
+  nickInit();
   $('rankBtn').addEventListener('click',()=>{SFX.ui();soundOn();rankOpen();});
   $('rankClose').addEventListener('click',()=>{SFX.ui();show('rank',false);});
   $('rankJoin').addEventListener('click',rankJoin);
@@ -39,12 +40,22 @@ function rankInit(){
 function rankOpen(){show('rank',true);show('hubHint',false);const on=!!rankMe;show('rankJoinBox',!on&&!!RANK_URL);
   $('rankWho').textContent=!RANK_URL?'순위 서버를 준비 중입니다.':on?`${rankMe.name} 님`:'닉네임을 정하면 순위에 오릅니다.';
   if(on)rankSubmit(null);rankLoad();}
-async function rankJoin(){const nm=$('rankName').value.trim();const msg=$('rankMsg');
-  if(!/^[가-힣A-Za-z0-9_]{2,12}$/.test(nm)){msg.textContent='닉네임은 2~12자, 한글·영문·숫자만 쓸 수 있습니다.';return;}
+async function rankJoin(){const ok=await rankRegister($('rankName').value.trim(),$('rankMsg'));if(ok){SFX.level();rankOpen();}}
+/* 닉네임 등록(순위 창·시작 창이 함께 씀) */
+async function rankRegister(nm,msg){
+  if(!/^[가-힣A-Za-z0-9_]{2,12}$/.test(nm)){msg.textContent='닉네임은 2~12자, 한글·영문·숫자만 쓸 수 있습니다.';return false;}
   msg.textContent='등록하는 중…';
   try{const j=await rankPost('/register',{name:nm});rankMe={id:j.id,key:j.key,name:j.name};try{localStorage.setItem('darkdweller.rank',JSON.stringify(rankMe));}catch(_){}
-    msg.textContent='';SFX.level();rankOpen();}
-  catch(e){msg.textContent=e.message==='off'?'순위 서버를 준비 중입니다.':(e.message||'등록하지 못했습니다. 인터넷 연결을 확인해 주세요.');}}
+    msg.textContent='';return true;}
+  catch(e){msg.textContent=e.message==='off'?'순위 서버를 준비 중입니다.':(e instanceof TypeError||!e.message)?'등록하지 못했습니다. 인터넷 연결을 확인해 주세요.':e.message;return false;}}
+/* 11-16 대표님 "닉네임은 시작시 만드는 걸로": 제목 화면을 누르면 닉네임이 없을 때 먼저 묻는다. 서버가 안 되면 '나중에'로 넘어가고 다음에 다시 묻는다. */
+let nickGo=null,nickBusy=false;
+function nickGate(go){if(rankMe||!RANK_URL){go();return;}nickGo=go;show('nick',true);show('nickLaterBox',false);$('nickMsg').textContent='';setTimeout(()=>{try{$('nickName').focus();}catch(_){}} ,60);}
+async function nickSubmit(){if(nickBusy)return;nickBusy=true;$('nickOk').disabled=true;
+  const ok=await rankRegister($('nickName').value.trim(),$('nickMsg'));nickBusy=false;$('nickOk').disabled=false;
+  if(ok){SFX.level();nickDone();}else if(!/닉네임은|이미|사용/.test($('nickMsg').textContent))show('nickLaterBox',true);}
+function nickDone(){show('nick',false);const g=nickGo;nickGo=null;if(g)g();}
+function nickInit(){$('nickOk').addEventListener('click',()=>{SFX.ui();nickSubmit();});$('nickName').addEventListener('keydown',e=>{if(e.key==='Enter')nickSubmit();});$('nickLater').addEventListener('click',()=>{SFX.ui();nickDone();});}
 async function rankLoad(){
   for(const[b,k]of[['rkRift','rift'],['rkTotal','total'],['rkSlot','slot']])$(b).classList.toggle('on',rankBoard===k);
   show('rankSlots',rankBoard==='slot');for(const b of $('rankSlots').children)b.classList.toggle('on',b.dataset.k===rankSlot);

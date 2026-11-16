@@ -9,20 +9,17 @@ let ELM={},SETN={},streak=0,streakT=0,soulStack=0,killCount=0,aegisT=0,raT=4,rev
 /* 계열 피해: cut 물리, fire 화염, zap 번개, ice 냉기, vine 독, thud 암흑, all 전부 */
 const FXEL={forge:{fire:.25},stormEl:{zap:.25},frostEl:{ice:.25},darkEl:{thud:.25,vine:.25},venomEl:{vine:.4},zeus:{zap:.6},surtr:{fire:.6},poseidon:{ice:.6},erebus:{thud:.6,vine:.6},
   excalibur:{cut:.5},gungnir:{ice:.4,cut:.2},mjolnir:{zap:.3},allDmg:{all:.1}};
-function relicReset(){wuxReset();streak=0;streakT=0;soulStack=0;killCount=0;aegisT=0;raT=4;reviveUsed=false;slashN=0;P.valkT=0;}
+function relicReset(){wuxReset();primeReset();streak=0;streakT=0;soulStack=0;killCount=0;aegisT=0;raT=4;reviveUsed=false;slashN=0;P.valkT=0;}
 const setHas=(k,n)=>(SETN[k]||0)>=n;
 /* 능력치를 다시 셀 때: 세트 조각 수, 계열 피해, 고유 효과가 바꾸는 능력치 */
 function relicRecalc(s,fx){
-  SETN={};for(const[sk]of EQUIP_SLOTS){const it=SAVE.equip[sk];if(it&&it.set)SETN[it.set]=(SETN[it.set]||0)+1;}
+  SETN={};for(const[sk]of EQUIP_SLOTS){const k=itemSet(SAVE.equip[sk]);if(k)SETN[k]=(SETN[k]||0)+1;}
   ELM={};const el=(o,n)=>{for(const k in o)ELM[k]=(ELM[k]||0)+o[k]*n;},add=(k,v)=>{fx[k]=(fx[k]||0)+v;};
   for(const k in fx)if(FXEL[k])el(FXEL[k],fx[k]);
+  primeRecalc(s,fx,el); /* 신화의 약한 능력(신·무협) */
   fx.zproc=.15*(fx.zeus||0);fx.iceBurst=fx.poseidon||0;
-  if(setHas('zeus',2))el({zap:.25},1);if(setHas('zeus',3))add('zapChain',1.5);if(setHas('zeus',4))fx.zproc+=.2;
-  if(setHas('odin',2))el({all:.15},1);if(setHas('odin',3))add('wisdom',1);if(setHas('odin',4))add('hecate',1);
-  if(setHas('hades',2))el({thud:.25,vine:.25},1);if(setHas('hades',3))add('souls',1);if(setHas('hades',4))add('hadesSet',1);
-  if(setHas('athena',2))add('guard',1);if(setHas('athena',3))s.mres+=20;if(setHas('athena',4))add('aegis',1);
-  if(setHas('surtr',2))el({fire:.25},1);if(setHas('surtr',3))s.area+=15;if(setHas('surtr',4))add('surtrSet',1);
-  if(setHas('poseidon',2))el({ice:.25},1);if(setHas('poseidon',3))add('chillDmg',1);if(setHas('poseidon',4))fx.iceBurst+=1;
+  if(setHas('myth',SET_NEED)){el({all:.4},1);add('guard',1.5);add('aegis',1);s.def+=15;}      /* 신화 세트 · 신들의 가호 */
+  if(setHas('wuxia',SET_NEED)){el({all:.2},1);s.cdr+=20;s.aspd+=25;add('lingbo',1);}              /* 무협 세트 · 무림지존 */
   if(fx.gungnir)add('spearTwin',2*fx.gungnir);if(fx.mjolnir)add('zapChain',fx.mjolnir);
   if(fx.keenEye)s.crit+=8*fx.keenEye;if(fx.swift)s.move+=15*fx.swift;if(fx.dodge2)s.move+=15*fx.dodge2;if(fx.atlas)s.move-=10*fx.atlas;
   wuxRecalc(s,fx);
@@ -43,13 +40,13 @@ function relicDmg(e,kind,heavy){
 }
 const procDmg=b=>b*(1+P.level*.08);
 function relicOnHit(e,kind){
-  if(e.dead)return;wuxHit(e);
+  if(e.dead)return;wuxHit(e);primeHit(e);
   if(FX.zproc&&kind==='zap'&&Math.random()<FX.zproc&&can('zp',300)){const x=e.x,y=e.y;later(.08,()=>strikeAt(x,y,60*AREA,procDmg(40),false));}
   if(FX.rune&&Math.random()<.06*FX.rune&&can('rn',300)){const x=e.x,y=e.y;later(.08,()=>strikeAt(x,y,56*AREA,procDmg(34),false));}
   if(FX.medusa&&!e.boss&&Math.random()<.03*FX.medusa){e.stun=Math.max(e.stun,1.5);reactFx(e,'석화','#c9d1e0');}
 }
 function relicOnKill(e){
-  wuxKill(e);killCount++;streak++;streakT=3;
+  wuxKill(e);primeKill(e);killCount++;streak++;streakT=3;
   if(FX.hades)soulStack=Math.min(FX.hades,soulStack+.005*FX.hades);
   const heal=.003*(FX.souls||0)+.006*(FX.anubis||0);if(heal&&!P.dead)P.hp=Math.min(P.maxhp,P.hp+P.maxhp*heal);
   if(FX.valk)P.valkT=3;
@@ -87,7 +84,7 @@ function sunBeam(){
   SFX.wave();return true;
 }
 function relicTick(dt){
-  wuxTick(dt);
+  wuxTick(dt);primeTick(dt);
   if(streakT>0){streakT-=dt;if(streakT<=0)streak=0;}
   if(P.valkT>0)P.valkT-=dt;if(aegisT>0)aegisT-=dt;
   if(FX.ra||FX.ra2){raT-=dt;if(raT<=0)raT=sunBeam()?(FX.ra2?6:9):.5;}
@@ -99,9 +96,9 @@ function relicOnSlash(a,dmg){
 }
 /* 보호막이 준비됐을 때 주인공 둘레에 금빛 고리 */
 function renderRelic(){
-  wuxFx();
+  wuxFx();primeRender();
   if(state!=='play'||P.dead||!FX.aegis||aegisT>0)return;
   ctx.lineWidth=5;ctx.strokeStyle=INK;ctx.beginPath();ctx.ellipse(P.x,P.y-22,26,30,0,0,TAU);ctx.stroke();ctx.lineWidth=2.2;ctx.strokeStyle=`rgba(255,224,138,${.6+.3*Math.sin(clock*5)})`;ctx.stroke();
 }
 /* 장비 설명에 쓸 세트 정보: [세트 이름, 낀 개수, [효과 글, 켜졌는지]...] */
-function setInfo(it){if(!it.set||!SETS[it.set])return null;const n=SETN[it.set]||0;return{name:SETS[it.set].n,n,rows:SETS[it.set].b.map((t,i)=>[`${i+2}세트 · ${t}`,n>=i+2])};}
+function setInfo(it){const k=itemSet(it);if(!k)return null;const S=SETS[k],n=SETN[k]||0;return{name:`${S.k} · ${S.n}`,n,rows:[[`${SET_NEED}개 · ${S.b}`,n>=SET_NEED]]};}

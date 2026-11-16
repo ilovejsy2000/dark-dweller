@@ -59,13 +59,13 @@ const HELP={
     const gr=el('div','hsec');gr.append(el('h3',null,'등급'));
     const rate=['60%','29.45%','9%','1%','0.5%'];
     GRADES.forEach((g,i)=>{const r=el('div','hgrade');r.style.setProperty('--gc',g.c);r.append(el('i'),el('b',null,g.k),el('span',null,`능력치 ${g.n}줄 · 나올 확률 ${rate[i]}`));gr.append(r);});
-    const pr=el('div','hgrade');pr.style.setProperty('--gc',PRIME.c);pr.append(el('i'),el('b',null,PRIME.k+' 신화'),el('span',null,'모든 줄의 최대치가 1.5배 · 0.05%'));gr.append(pr);
-    const st=el('div','hsec');st.append(el('h3',null,'세트 효과'),el('p',null,'같은 세트의 장비를 2·3·4개 끼면 효과가 차례로 켜집니다.'));
-    for(const k in SETS){const s=SETS[k];st.append(hrow('',s.n,null,s.b.map((t,i)=>`${i+2}개: ${t}`).join(' / ')));}
+    const pr=el('div','hgrade');pr.style.setProperty('--gc',PRIME.c);pr.append(el('i'),el('b',null,PRIME.k+' 신화'),el('span',null,'모든 줄의 최대치가 1.5배 + 초월 고유 효과 · 0.05%'));gr.append(pr);
+    const st=el('div','hsec');st.append(el('h3',null,'세트 효과'),el('p',null,`신 이름이 붙은 전설·신화 장비는 신 세트, 무협 장비는 무협 세트입니다. 같은 세트를 ${SET_NEED}개 끼면 세트 효과가 열립니다.`));
+    for(const k in SETS){const s=SETS[k];st.append(hrow('',`${s.k} · ${s.n}`,null,`${SET_NEED}개: ${s.b}`));}
     return[
       hsec('장비 칸','모두 14칸입니다 — 투구, 목걸이, 귀걸이 2, 무기 2, 갑옷, 장갑, 벨트, 신발, 반지 4.','판 도중에도 멈추고 갈아 낄 수 있습니다. 창고는 200칸입니다.'),gr,
       hsec('능력치 읽는 법','장비를 누르면 줄마다 지금 값과 그 줄이 가질 수 있는 최대치가 함께 나옵니다.','칸 오른쪽 아래 숫자는 완성도(0~100)입니다. 모든 줄이 최대치면 100입니다.','늦은 시간에, 어려운 맵에서 떨어진 장비일수록 최대치에 가깝게 나옵니다.'),
-      hsec('고유 효과','전설과 신화 장비에는 이름마다 정해진 고유 효과가 하나씩 붙습니다. 장비 설명 창의 금빛 줄이 그것입니다.'),st,
+      hsec('능력과 고유 효과','전설 장비에는 이름마다 정해진 능력이 붙습니다. 신화 장비는 약한 능력 하나만 켜지고, 초월로 나오면 그 장비의 진짜 고유 효과와 초월 효과가 함께 열립니다(신·무협 똑같음, 초월 효과는 무기는 무기마다·나머지는 부위마다 다름).'),st,
       hsec('어디서 나오나','보통 적 1.2%, 강화된 적 10% 확률로 떨어뜨립니다. 정예는 1개, 보스는 2개, 보물 상자는 1~2개를 줍니다.','수호 보스는 신화 장비를 반드시 주고, 먼 곳의 수호 보스는 하나 더 줍니다.'),
     ];},
   mob:()=>{
