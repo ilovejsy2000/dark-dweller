@@ -43,7 +43,7 @@ function drawEnemy(e){
   const wob=T.img?Math.sin(e.phase*TAU):0,hop=T.img&&!T.float?-Math.abs(wob)*2.4:0;if(e.fade>0)ctx.globalAlpha=.3;
   blit(sp,e.x+jx,e.y+fy+hop,(1+.26*h)*e.dir*born*(1-.04*wob),(1-.2*h)*born*(1+.05*wob));ctx.globalAlpha=1;
   if(e.ice>0){ctx.globalAlpha=.5;blit(T.white[f],e.x,e.y+fy,e.dir*born,born);ctx.globalAlpha=1;}
-  if(wind){ctx.font='24px "Jua","Malgun Gothic",sans-serif';ctx.textAlign='center';ctx.lineWidth=5;ctx.strokeStyle=INK;ctx.strokeText('!',e.x,e.y-e.r*2.6);ctx.fillStyle='#ffe066';ctx.fillText('!',e.x,e.y-e.r*2.6);}
+  if(wind){ctx.font='800 24px "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif';ctx.textAlign='center';ctx.lineWidth=5;ctx.strokeStyle=INK;ctx.strokeText('!',e.x,e.y-e.r*2.6);ctx.fillStyle='#ffe066';ctx.fillText('!',e.x,e.y-e.r*2.6);}
   if(e.stun>0&&e.ice<=0)for(let i=0;i<3;i++){const a=clock*6+i*TAU/3;starPath(ctx,e.x+Math.cos(a)*e.r*.8,e.y-e.r*2.3*e.sc+Math.sin(a)*4,4,4.5,1.8,a);inkF(ctx,'#ffe066',1.8);}
 }
 function drawDrop(d){if(d.wait>0)return;const big=d.it.gi>=3,bobv=d.landed?Math.sin(d.t*3+d.seed)*(big?2.5:1):0;
@@ -201,7 +201,7 @@ function render(dt){
   for(const e of enemies){if(!e.elite||e.boss)continue;const w=92,x=e.x-w/2,y=e.y-150;rr(ctx,x,y,w,11,4);inkF(ctx,'#0d0f1e',3);rr(ctx,x+2,y+2,Math.max(2,(w-4)*clamp(e.hp/e.maxhp,0,1)),7,3);ctx.fillStyle='#e2504c';ctx.fill();}
   ctx.textAlign='center';ctx.textBaseline='middle';
   for(const d of drops){if(!d.landed||d.it.gi<3)continue;const G=GRADES[d.it.gi];ctx.font='700 13px "Noto Sans KR","Malgun Gothic",sans-serif';ctx.lineWidth=4;ctx.strokeStyle=INK;ctx.strokeText(d.it.name,d.x,d.y-40);ctx.fillStyle=gradeColor(d.it);ctx.fillText(d.it.name,d.x,d.y-40);}
-  for(const p of parts)if(p.k==='num'){const age=p.max-p.life,sc=1+.6*Math.max(0,1-age/.1);ctx.globalAlpha=Math.min(1,p.life*4);ctx.font=`${p.size*sc}px "Jua","Malgun Gothic",sans-serif`;ctx.lineWidth=p.size*.3;ctx.strokeStyle=INK;ctx.strokeText(p.txt,p.x,p.y);ctx.fillStyle=p.col;ctx.fillText(p.txt,p.x,p.y);}
+  for(const p of parts)if(p.k==='num'){const age=p.max-p.life,sc=1+.6*Math.max(0,1-age/.1);ctx.globalAlpha=Math.min(1,p.life*4);ctx.font=`800 ${p.size*sc}px "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif`;ctx.lineWidth=p.size*.3;ctx.strokeStyle=INK;ctx.strokeText(p.txt,p.x,p.y);ctx.fillStyle=p.col;ctx.fillText(p.txt,p.x,p.y);}
   ctx.globalAlpha=1;metaTop();
 
   // 화면 고정 효과

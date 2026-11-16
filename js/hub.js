@@ -16,7 +16,7 @@ const CAVE_DARK=[10,8,22,.3];                        // 동굴 안 어둠
 let hubNear=null,hubHinted=false,hubExit=null,hubEnter=0;
 const hubPanels=['lobby','inv','tal','cx','cfg','help','tip','result'];
 const hubFree=()=>state==='lobby'&&!hubExit&&hubPanels.every(id=>$(id).hidden);
-function hubOpen(k){SFX.ui();soundOn();joy=null;
+function hubOpen(k){SFX.ui();soundOn();joy=null;show('hubHint',false); /* 안내문이 열린 창 위에 겹치지 않게 */
   if(k==='exit'){refreshLobby();show('lobby',true);}
   else if(k==='forge'){uiInv('lobby');uiNote2('대장간 · 장비를 눌러 재련하거나, 꾹 눌러 여러 개를 골라 분해하세요.');}
   else if(k==='stash')uiInv('lobby');
@@ -110,7 +110,7 @@ function hubGlow(){if(state!=='lobby'||!caveRocks)return;for(const r of caveRock
   glow(0,520,200,'rgb(150,190,255)',.4);}
 function hubLights(){lights.push([0,520,320,1]);lights.push([0,330,170,.6]);
   /* 출구 이름표 */
-  const o=HUB[4],near=hubNear===o;ctx.font=`${near?17:14}px "Jua","Malgun Gothic",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=4;ctx.strokeStyle=INK;ctx.strokeText(o.n,o.x,o.y-18);ctx.fillStyle=near?'#ffcf3f':'#e6e9ff';ctx.fillText(o.n,o.x,o.y-18);}
+  const o=HUB[4],near=hubNear===o;ctx.font=`800 ${near?17:14}px "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=4;ctx.strokeStyle=INK;ctx.strokeText(o.n,o.x,o.y-18);ctx.fillStyle=near?'#ffcf3f':'#e6e9ff';ctx.fillText(o.n,o.x,o.y-18);}
 function drawHub(o){
   const x=o.x,y=o.y,near=hubNear===o,t=clock;
   ctx.fillStyle='rgba(8,8,20,.4)';ell(ctx,x,y+2,34,10);ctx.fill();
@@ -132,7 +132,7 @@ function drawHub(o){
     ctx.fillStyle='#ffd56a';ell(ctx,x,y-62,3,3);ctx.fill();lights.push([x,y-40,100,.5]);break;}
   }
   const ly=y-(o.k==='tal'?96:o.k==='cx'?86:o.k==='forge'?80:70);
-  ctx.font=`${near?17:14}px "Jua","Malgun Gothic",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=4;ctx.strokeStyle=INK;ctx.strokeText(o.n,x,ly);ctx.fillStyle=near?'#ffcf3f':'#e6e9ff';ctx.fillText(o.n,x,ly);
+  ctx.font=`800 ${near?17:14}px "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=4;ctx.strokeStyle=INK;ctx.strokeText(o.n,x,ly);ctx.fillStyle=near?'#ffcf3f':'#e6e9ff';ctx.fillText(o.n,x,ly);
   if(near){ctx.lineWidth=3;ctx.strokeStyle=`rgba(255,207,63,${.6+.3*Math.sin(t*6)})`;ctx.beginPath();ctx.ellipse(x,y,40,14,0,0,TAU);ctx.stroke();}
 }
 function hubInit(){

@@ -105,4 +105,4 @@ function dragonPalm(){const t=nearest(P.x,P.y,560);if(!t)return false;const a=Ma
 /* 그리기: 천마강림 기운, 마기 수 */
 function wuxFx(){if(state!=='play'||P.dead)return;
   if(WX.tmT>0){ctx.lineWidth=4;ctx.strokeStyle=`rgba(182,120,255,${.5+.3*Math.sin(clock*8)})`;ctx.beginPath();ctx.ellipse(P.x,P.y-22,30,36,0,0,TAU);ctx.stroke();lights.push([P.x,P.y-30,140,.6]);if(Math.random()<.4)addP({k:'ember',x:P.x+rand(-16,16),y:P.y-rand(0,50),vx:0,vy:-60,size:rand(1.6,3),life:.5,max:.5,col:'#b678ff'});}
-  if(FX.tianmo&&WX.tmT<=0&&WX.mag>0){ctx.font='700 11px "Jua","Malgun Gothic",sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle=INK;const t=`마기 ${WX.mag}`;ctx.strokeText(t,P.x,P.y-74);ctx.fillStyle='#c9a0ff';ctx.fillText(t,P.x,P.y-74);}}
+  if(FX.tianmo&&WX.tmT<=0&&WX.mag>0){ctx.font='700 11px "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle=INK;const t=`마기 ${WX.mag}`;ctx.strokeText(t,P.x,P.y-74);ctx.fillStyle='#c9a0ff';ctx.fillText(t,P.x,P.y-74);}}

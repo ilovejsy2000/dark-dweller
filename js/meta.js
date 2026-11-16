@@ -135,7 +135,7 @@ function metaTop(){
   for(const e of enemies){if(e.type!=='tgob'||e.dead)continue;const w=70,x=e.x-w/2,y=e.y-e.r*4.6;rr(ctx,x,y,w,9,4);inkF(ctx,'#0d0f1e',3);rr(ctx,x+2,y+2,Math.max(2,(w-4)*clamp(e.hp/e.maxhp,0,1)),5,2);ctx.fillStyle='#ffd56a';ctx.fill();
     const lft=Math.max(0,25-e.age);ctx.font='700 12px "Noto Sans KR","Malgun Gothic",sans-serif';ctx.lineWidth=4;ctx.strokeStyle=INK;ctx.strokeText(`보물 고블린 ${Math.ceil(lft)}`,e.x,y-10);ctx.fillStyle='#ffd56a';ctx.fillText(`보물 고블린 ${Math.ceil(lft)}`,e.x,y-10);}
   for(const c of chests){if(c.spin===undefined)continue;const fin=c.spin<.22,gi=fin?c.best:(clock*(10+30*c.spin)|0)%GRADES.length,G=GRADES[gi],y=c.y-62-(fin?6:0);
-    ctx.font=`900 ${fin?24:19}px "Jua","Malgun Gothic",sans-serif`;ctx.lineWidth=6;ctx.strokeStyle=INK;ctx.strokeText(G.k,c.x,y);ctx.fillStyle=G.c;ctx.fillText(G.k,c.x,y);}
+    ctx.font=`900 ${fin?24:19}px "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif`;ctx.lineWidth=6;ctx.strokeStyle=INK;ctx.strokeText(G.k,c.x,y);ctx.fillStyle=G.c;ctx.fillText(G.k,c.x,y);}
   const al=RUN.altar;if(al&&state==='play'){ctx.font='700 12px "Noto Sans KR","Malgun Gothic",sans-serif';ctx.lineWidth=4;ctx.strokeStyle=INK;const t=`갈림길 제단 ${Math.ceil(al.life)}`;ctx.strokeText(t,al.x,al.y-92);ctx.fillStyle='#e0c8ff';ctx.fillText(t,al.x,al.y-92);}
 }
 function metaMinimap(mx,my){

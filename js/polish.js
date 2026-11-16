@@ -61,7 +61,7 @@ function resultInit(){invExtraInit();$('retryBtn').addEventListener('click',()=>
 
 /* ───── 특성을 올릴 수 있으면 제단 위에 느낌표 ───── */
 const talReady=()=>TALENTS.some(t=>tal(t.id)<t.max&&(SAVE.shard||0)>=talCost(t));
-function drawTalBadge(x,y){if(!talReady())return;const b=Math.sin(clock*5)*3;ell(ctx,x,y-118+b,11,11);inkF(ctx,'#ff5a6a',3);ctx.font='16px "Jua","Malgun Gothic",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff';ctx.fillText('!',x,y-117+b);}
+function drawTalBadge(x,y){if(!talReady())return;const b=Math.sin(clock*5)*3;ell(ctx,x,y-118+b,11,11);inkF(ctx,'#ff5a6a',3);ctx.font='800 16px "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff';ctx.fillText('!',x,y-117+b);}
 
 /* ───── 줍는 물건(1회차): 자석 = 화면의 경험치 보석을 모두 끌어옴, 찐빵 = 체력 30% 회복 ─────
    적을 피해 다니면 보석을 못 주워 레벨이 멈추던 것(보석 200개 넘게 쌓임)을 풀어 준다 */
@@ -95,4 +95,4 @@ function adaptTick(dt){if(state!=='play'||ending||rift)return;adaptT-=dt;if(adap
 function bestFor(type){let b=null;for(const it of SAVE.stash)if(it.t===type&&(!b||itemScore(it)>itemScore(b)))b=it;return b;}
 function autoEquip(){let n=0;for(const[sk,type]of EQUIP_SLOTS){const cur=SAVE.equip[sk],b=bestFor(type);if(b&&(!cur||itemScore(b)>itemScore(cur))){equipItem(b,sk);n++;}}return n;}
 const gearUpgrade=()=>EQUIP_SLOTS.some(([sk,type])=>{const cur=SAVE.equip[sk],b=bestFor(type);return b&&(!cur||itemScore(b)>itemScore(cur));});
-function drawStashBadge(x,y){if(!gearUpgrade())return;const b=Math.sin(clock*5+1)*3;ell(ctx,x,y-92+b,11,11);inkF(ctx,'#ff5a6a',3);ctx.font='16px "Jua","Malgun Gothic",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff';ctx.fillText('!',x,y-91+b);}
+function drawStashBadge(x,y){if(!gearUpgrade())return;const b=Math.sin(clock*5+1)*3;ell(ctx,x,y-92+b,11,11);inkF(ctx,'#ff5a6a',3);ctx.font='800 16px "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff';ctx.fillText('!',x,y-91+b);}

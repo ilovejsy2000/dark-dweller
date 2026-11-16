@@ -20,13 +20,22 @@ const TRACKS={
          [7,null,8,null,10,null,8,null,7,null,6,null,4,null,null,null],[6,null,7,null,8,null,9,null,11,null,null,null,10,null,9,null]]},
 };
 let mus=null;
+/* ───── 곡 파일(11-16, CC0 — 출처는 audio/출처.txt). 필요한 장면이 오면 그때 받는다 ───── */
+const MUS_FILES={hub:'audio/hub.mp3',run:'audio/run.mp3',boss:'audio/boss.mp3',win:'audio/win.mp3'},MUS_VOL={hub:1.35,run:.95,boss:1,win:1.1} /* 곡마다 크기를 재어 맞춤(판·보스·클리어 곡은 원래 두 배 크다) */,musBuf={},musLoad={};
+function musGet(k){if(musBuf[k]||musLoad[k]||!AC)return musBuf[k]||null;musLoad[k]=1;
+  fetch(MUS_FILES[k]).then(r=>r.ok?r.arrayBuffer():Promise.reject(r.status)).then(b=>new Promise((res,rej)=>AC.decodeAudioData(b,res,rej))).then(buf=>{musBuf[k]=buf;}).catch(()=>{musLoad[k]=2;});return null;}
+function musFileStart(k){const b=musBuf[k];if(!b||!mus)return;const t=AC.currentTime,src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(MUS_VOL[k],t+(k==='boss'?.5:1.6));src.connect(g);g.connect(mus.bus);src.start(t);mus.src=src;mus.sg=g;mus.fileKey=k;}
+function musFileStop(fast){if(!mus||!mus.src)return;const t=AC.currentTime,s=mus.src,g=mus.sg,d=fast?.35:1.1;try{g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(.0001,t+d);s.stop(t+d+.05);}catch(_){}mus.src=null;mus.sg=null;mus.fileKey=null;}
+/* 클리어 곡: 한 번만, 배경 곡은 잠깐 쉰다 */
+function musWin(){if(!AC||!mus||!musBuf.win)return false;musFileStop(true);mus.hold=AC.currentTime+9;const t=AC.currentTime,src=AC.createBufferSource(),g=AC.createGain();src.buffer=musBuf.win;g.gain.setValueAtTime(MUS_VOL.win,t);g.gain.setValueAtTime(MUS_VOL.win,t+6.5);g.gain.linearRampToValueAtTime(.0001,t+8.8);src.connect(g);g.connect(mus.bus);src.start(t+.1);src.stop(t+9);return true;} /* 곡이 57초라 앞 8초만 쓰고 서서히 끈다 */
 function ambStart(){
   if(!AC||mus||!CFG.bgm||muted)return;
   try{const bus=AC.createGain();bus.gain.setValueAtTime(.0001,AC.currentTime);bus.gain.linearRampToValueAtTime(.32,AC.currentTime+2);bus.connect(master);
     const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=3200;lp.connect(bus);
-    mus={bus,lp,next:AC.currentTime+.15,step:0,track:'hub',want:'hub',burn:false};}catch(_){mus=null;}
+    mus={bus,lp,next:AC.currentTime+.15,step:0,track:'hub',want:'hub',burn:false,src:null,sg:null,fileKey:null,hold:0};musGet('hub');}catch(_){mus=null;}
 }
-function ambStop(){if(!mus)return;const m=mus;mus=null;try{m.bus.gain.cancelScheduledValues(AC.currentTime);m.bus.gain.setValueAtTime(m.bus.gain.value,AC.currentTime);m.bus.gain.linearRampToValueAtTime(.0001,AC.currentTime+.4);setTimeout(()=>{try{m.bus.disconnect();}catch(_){}},600);}catch(_){}}
+function ambStop(){if(!mus)return;try{if(mus.src)mus.src.stop(AC.currentTime+.5);}catch(_){}const m=mus;mus=null;try{m.bus.gain.cancelScheduledValues(AC.currentTime);m.bus.gain.setValueAtTime(m.bus.gain.value,AC.currentTime);m.bus.gain.linearRampToValueAtTime(.0001,AC.currentTime+.4);setTimeout(()=>{try{m.bus.disconnect();}catch(_){}},600);}catch(_){}}
 /* 소리 한 개: 파형·주파수·시작·길이·크기·붙는 시간 */
 function vnote(type,f,t,dur,vol,att,dest){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
   g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol,t+(att||.008));g.gain.exponentialRampToValueAtTime(.0005,t+dur);o.connect(g);g.connect(dest||mus.lp);o.start(t);o.stop(t+dur+.05);}
@@ -51,13 +60,17 @@ function musStep(T,st,t,dur){
 }
 function ambTick(raw){
   if(!mus||!AC)return;
-  const boss=state==='play'&&bossRef&&!bossRef.dead&&!bossRef.sleep,run=state==='play'&&!ending;
+  const boss=state==='play'&&bossRef&&!bossRef.dead&&!bossRef.sleep,run=state==='play'&&(!ending||ending.win); /* 클리어 연출 동안은 판 곡을 이어 가다 결과 화면에서 클리어 곡 */
   mus.want=boss?'boss':run?'run':'hub';mus.burn=state==='play'&&burnT>0;
   /* 곡을 바꿀 때는 마디가 끝날 때 바꾼다(보스는 바로) */
   if(mus.want!==mus.track&&(mus.step%16===0||mus.want==='boss')){mus.track=mus.want;mus.step=0;}
-  const T=TRACKS[mus.track],dur=60/T.bpm/4/(mus.burn?1.0:1);
+  /* 곡 파일: 받아 둔 게 있으면 그걸 틀고, 장면이 바뀌면 천천히 넘긴다(보스는 빨리). 판 곡을 받으면 보스·클리어 곡도 미리 받아 둔다 */
+  musGet(mus.want);if(mus.want!=='hub'){musGet('boss');musGet('win');}
+  if(AC.currentTime>=mus.hold){if(mus.fileKey!==mus.want&&musBuf[mus.want]){musFileStop(mus.want==='boss');musFileStart(mus.want);}else if(mus.fileKey&&mus.fileKey!==mus.want&&!musBuf[mus.want])musFileStop();}
+  if(mus.src){mus.src.playbackRate.setTargetAtTime(mus.burn?1.06:1,AC.currentTime,.4);mus.next=AC.currentTime+.05;if(mus.burn&&Math.random()<raw*2)vnoise2(AC.currentTime,.05,.03,'highpass',7000);}
+  else if(AC.currentTime>=mus.hold){const T=TRACKS[mus.track],dur=60/T.bpm/4/(mus.burn?1.0:1);
   if(mus.next<AC.currentTime-.3)mus.next=AC.currentTime+.05;
-  while(mus.next<AC.currentTime+.18){musStep(T,mus.step,mus.next,dur);mus.next+=dur;mus.step++;}
+  while(mus.next<AC.currentTime+.18){musStep(T,mus.step,mus.next,dur);mus.next+=dur;mus.step++;}}
   /* 모닥불 가까이에선 장작 타닥 소리 */
   const near=state!=='play'?.4:clamp(1-Math.hypot(P.x,P.y)/260,0,1);if(near>0&&Math.random()<raw*6*near)noise(.025,.05*near,'highpass',2500,5200);
 }
@@ -71,6 +84,6 @@ SFX.pick=()=>{tone('sine',hz(31),0,.06,.1);tone('sine',hz(36),0,.08,.08,.04);};
 SFX.boom=()=>{if(!can('boom',70))return;noise(.35,.55,'lowpass',1200,90);tone('sine',120,34,.35,.75);noise(.12,.25,'highpass',2500,900);};
 SFX.elite=()=>{tone('sawtooth',hz(-22),hz(-24),1.1,.32);tone('sawtooth',hz(-15),hz(-17),1.1,.18,.04);noise(.8,.28,'lowpass',380,70);tone('sine',55,30,.9,.5);};
 SFX.die=()=>{[7,3,0,-5].forEach((s,i)=>tone('triangle',hz(s),0,.35,.18,i*.13));noise(.8,.15,'lowpass',600,80,1,.1);};
-SFX.win=()=>{[0,4,7,12,16,19,24].forEach((s,i)=>tone('triangle',hz(12+s),0,.3,.16,i*.07));[0,4,7].forEach(s=>tone('sine',hz(12+s),0,1.2,.08,.5));};
+SFX.win=()=>{if(musWin())return;[0,4,7,12,16,19,24].forEach((s,i)=>tone('triangle',hz(12+s),0,.3,.16,i*.07));[0,4,7].forEach(s=>tone('sine',hz(12+s),0,1.2,.08,.5));};
 SFX.hurt=()=>{if(!can('hurt',120))return;tone('square',160,60,.16,.22);noise(.12,.3,'lowpass',800,180);tone('sine',90,50,.12,.3);};
 SFX.ui=()=>{tone('sine',hz(24),hz(31),.06,.12);tone('triangle',hz(36),0,.05,.04,.03);};

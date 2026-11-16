@@ -4,7 +4,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>다크 드웰러</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;800;900&display=swap">
 <style>
 /* 배치: 화면 가득 캔버스 한 장. 판 중 정보는 네 모서리, 거점·선택·결과는 금테 두른 판, 장비·창고는 화면 전체(위는 몸 부위 칸, 아래는 창고). */
 :root{
@@ -407,6 +408,146 @@ body{word-break:keep-all;overflow-wrap:break-word}
 #banner{white-space:nowrap;font-size:clamp(24px,7vw,50px)}
 #tipCard .btns{gap:6px}#tipCard .btns button{white-space:nowrap;padding:8px 10px;font-size:13.5px;letter-spacing:0}
 .rstat b{white-space:nowrap;font-size:clamp(14px,4.4vw,19px)}.rstat small{white-space:nowrap}
+
+/* ══ 11-16 다시 입힘 ②: 대표님 "글씨가 깨져 보이고 색이 탁하고 요즘 게임 느낌이 아님" ══
+   글꼴: 프리텐다드 굵게(작은 글씨도 또렷). 둘레 먹선(8방향 그림자) 대신 짧고 부드러운 그림자 하나.
+   색: 탁한 남색 판 + 굵은 남색 테 → 깊은 남색 유리판 + 얇은 밝은 테, 단추는 맑은 그라데이션 + 아래 그림자. 위 규칙들을 덮어쓴다. */
+:root{
+  --ink:#0b0e1f;--night:#0c0f1f;--panel-1:#1d2244;--panel-2:#151933;--well:#11152b;--line:#2a3160;
+  --btn:#30386a;--btn-d:#20264a;--yel:#ffc83d;--yel-d:#e99a12;--paper:#f4f6ff;--dim:#9ea6c9;--blood:#ff4d5e;--xp:#38e0c4;
+  --font-display:"Pretendard Variable",Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --font-body:"Pretendard Variable",Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --outline:0 1px 0 rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.45);
+  --edge:rgba(255,255,255,.09);
+  --goldbtn:linear-gradient(180deg,#ffdd6e 0%,#ffbd33 100%);
+}
+body{font-family:var(--font-body);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;letter-spacing:-.01em}
+#timer,#event.burn,#bossBar b,#banner,.toast b,#cine b,h1,h2,.go,#dailyRow b,.talrow b,#riftRow b,#tierRow .tierN,#maps b,.choice b,.rcp b,.lbl b,.nm,.hsec h3,.hrow b,.lab,/* 단추: 노랑(주 단추)·남색(보조) */
+.go,.ghost,.modes button,.seg button,#maps button,#tierRow button,/* 판 중 정보 */
+.lvb,.bar span,#goal,#event,.kl,#quest,#pauseBtn,#note,#cine small,.chip,#helpTabs button,.cxh,#bulk.selbar span,#adBtn b,.adslot,#adCount,#title .tlogo small,#title .tlogo b,#title .ttap,#tut b,.revc,.adgreen b,.rstat b,.rbest,.rtal,#hubTop .hres b,#hubTop .hres span,#fade b,#hubHint{font-weight:800}
+h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat b,.nm{font-weight:900}
+.gold{color:#ffd24a;text-shadow:0 3px 0 #a8670a,0 8px 22px rgba(0,0,0,.5)}
+.overlay{background:rgba(6,8,18,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.overlay.full{background:linear-gradient(180deg,#151a36,#0d1024)}
+.card{border:1px solid var(--edge);border-radius:22px;background:linear-gradient(180deg,rgba(33,39,76,.97),rgba(19,23,46,.97));box-shadow:0 20px 44px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07)}
+.eyebrow{background:rgba(255,255,255,.07);color:#b9c1e8;font-weight:700}
+.sub,.lab{color:#b9c1e8}
+/* 단추 */
+.go{border:0;border-radius:16px;color:#2b1a00;background:var(--goldbtn);text-shadow:none;letter-spacing:-.01em;box-shadow:0 4px 0 #b9720b,0 10px 22px rgba(255,170,40,.22),inset 0 1px 0 rgba(255,255,255,.65)}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 #b9720b,inset 0 1px 0 rgba(255,255,255,.65)}
+.ghost,#pauseBtn,#helpTabs button,.modes button,.seg button,#maps button{border:1px solid rgba(255,255,255,.1);color:#eef1ff;background:linear-gradient(180deg,#373f74,#2a3059);box-shadow:0 3px 0 #161a33,inset 0 1px 0 rgba(255,255,255,.12)}
+.ghost:active,.modes button:active,.seg button:active,#maps button:active{transform:translateY(2px);box-shadow:0 1px 0 #161a33}
+.ghost.warn{background:linear-gradient(180deg,#ff6b79,#e8475a);border-color:rgba(255,255,255,.16);box-shadow:0 3px 0 #a12a3a,inset 0 1px 0 rgba(255,255,255,.28)}
+.modes button[aria-pressed="true"],.seg button[aria-pressed="true"],#maps button[aria-pressed="true"],#helpTabs button.on,#riftRow button[aria-pressed="true"],#dailyRow button[aria-pressed="true"]{color:#2b1a00;border-color:transparent;background:var(--goldbtn);box-shadow:0 3px 0 #b9720b,inset 0 1px 0 rgba(255,255,255,.6)}
+#riftRow button{border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,#9381ff,#6c56e8);box-shadow:0 4px 0 #4532a8,inset 0 1px 0 rgba(255,255,255,.25)}
+#dailyRow button{border:1px solid rgba(255,255,255,.16);background:linear-gradient(180deg,#ffa358,#f27a28);box-shadow:0 4px 0 #b4541a,inset 0 1px 0 rgba(255,255,255,.3)}
+#adBtn,.adgreen{border:0;background:linear-gradient(180deg,#45e597,#22b86c);box-shadow:0 4px 0 #13804a,0 10px 20px rgba(40,200,120,.2),inset 0 1px 0 rgba(255,255,255,.4)}
+#adBtn b,.adgreen b{text-shadow:0 1px 0 rgba(0,0,0,.22)}
+/* 판 중 정보 */
+.lvb{border:0;color:#2b1a00;background:var(--goldbtn);box-shadow:0 2px 0 #b9720b,0 4px 12px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.6)}
+.bar{border:0;height:16px;border-radius:99px;background:rgba(6,8,20,.78);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 2px 8px rgba(0,0,0,.45)}
+.bar i{border-radius:99px;background:linear-gradient(180deg,#ff7d8b,#ff3f55);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.bar.xp{height:8px}.bar.xp i{background:linear-gradient(90deg,#26d3bb,#7cf2ff)}
+.bar.boss i{background:linear-gradient(180deg,#ffa060,#ff6a2a)}
+.bar span{font:800 10.5px/1 var(--font-body);letter-spacing:0;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.75)}
+#timer{font-size:30px;letter-spacing:-.02em;text-shadow:0 2px 0 rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.45)}
+#goal,#event,.kl,#quest{text-shadow:var(--outline);font-weight:700}
+#event.burn{font-weight:900;color:#ffa04a;text-shadow:0 2px 0 rgba(0,0,0,.5),0 0 14px rgba(255,140,50,.55)}
+#pauseBtn{border-radius:14px}
+#bossBar b{text-shadow:var(--outline)}
+#banner,#cine b,#fade b,.revc,#title .tlogo b{text-shadow:0 3px 0 rgba(0,0,0,.45),0 8px 22px rgba(0,0,0,.5)}
+#banner{letter-spacing:-.02em}
+#cine small,#title .tlogo small,#title .ttap,.hsec h3,.nm,.toast b,#hubTop .hres span,#tierRow .tierN{text-shadow:var(--outline)}
+#note,#tut,#hubHint{background:rgba(14,17,36,.88);border:1px solid var(--edge);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 8px 22px rgba(0,0,0,.35)}
+#note{font-weight:700}
+.toast{background:rgba(22,26,52,.94);border:1px solid var(--edge);border-left:4px solid var(--gc);box-shadow:0 8px 20px rgba(0,0,0,.4)}
+/* 선택 카드 */
+.choice{border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,#2b3264,#222851);box-shadow:0 4px 0 #13173a,0 8px 18px rgba(0,0,0,.28)}
+.choice:active{transform:translateY(3px);box-shadow:0 1px 0 #13173a}
+.choice p{color:#c8cff0}
+.choice em{border-radius:99px;font-weight:700;color:#d5dbf8;background:rgba(255,255,255,.08)}
+.choice em.el{background:#7a63ff;color:#fff}.choice em.sp{background:#38e0c4;color:#08201c}.choice em.fz{background:var(--yel);color:#2b1a00}
+.choice.fuse{border-color:rgba(190,175,255,.5);background:linear-gradient(180deg,#5d4bd3,#4535a6);box-shadow:0 4px 0 #2a1f6e,0 8px 18px rgba(80,60,200,.3)}
+.choice.rare{border-color:transparent;background:var(--goldbtn);box-shadow:0 4px 0 #b9720b,0 0 22px rgba(255,190,60,.45)}
+@keyframes rareGlow{to{box-shadow:0 4px 0 #b9720b,0 0 36px rgba(255,190,60,.85)}}
+.choice.rare b{color:#2b1a00}.choice.rare p{color:#5a3c00}.choice.rare em{color:#2b1a00;background:rgba(0,0,0,.1)}
+.chip{border:1px solid var(--edge);background:rgba(255,255,255,.06);border-radius:99px}
+/* 장비 · 창고 · 설명 · 특성 · 결과 */
+#doll{border:1px solid var(--edge);background:linear-gradient(180deg,#232a54,#181d3c);box-shadow:inset 0 0 40px rgba(0,0,0,.3)}
+.cell{border:1px solid rgba(255,255,255,.07);background:#141933;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);color:#7f88b6}
+.cell.empty{border:1.5px dashed rgba(160,170,220,.22);background:rgba(20,25,50,.5)}
+.cell[style*="background-image"]{border:1px solid rgba(255,255,255,.08);background-color:color-mix(in srgb,var(--gc) 18%,#151a34);box-shadow:inset 0 0 0 1.5px var(--gc)}
+.cell.g3,.cell.g4{box-shadow:inset 0 0 0 1.5px var(--gc),0 0 12px -2px var(--gc)}
+#tipCard{border:1px solid var(--edge);box-shadow:inset 0 0 0 1.5px var(--gc),0 20px 44px rgba(0,0,0,.5)}
+.ihd{border-bottom:1px solid var(--edge)}.ihd img{box-shadow:0 0 0 1.5px rgba(255,255,255,.14)}
+.fx{background:rgba(255,200,60,.08);border:1px solid rgba(255,200,60,.2)}
+.talrow,.cxt,.hsec,.rstat,.cxg.names span{border:1px solid var(--edge);background:rgba(255,255,255,.045);box-shadow:none}
+.rstat small{color:#9ea6c9;font-weight:600}
+.rstat.shard{border-color:rgba(190,175,255,.35);background:linear-gradient(180deg,#5c4bd6,#4535a6)}
+.rbest{border:0;color:#2b1a00;background:var(--goldbtn);box-shadow:0 3px 0 #b9720b}
+.rtal{font-size:13px;font-weight:700;color:#ffd862;background:rgba(255,200,60,.08);border:1px solid rgba(255,200,60,.22);border-radius:12px;padding:7px 10px;line-height:1.4}
+#bulk.selbar{border:1px solid var(--edge);background:rgba(22,26,52,.96);box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.setb,#saveBox{border:1px solid var(--edge)}
+.adslot{border:1.5px dashed rgba(160,170,220,.3)}
+#title{background:radial-gradient(ellipse at 50% 30%,#27306a 0%,#131736 55%,#090b1c 100%)}
+#hubTop .hres span{font-weight:700}
+
+/* ══ 11-16 다시 입힘 ③: 대표님 "노랑·주황은 요즘 색이 아님 → 청록과 보라를 각각 쓸 곳에, 메뉴판 테두리·구성도 요즘 식으로" ══
+   청록 = 주 단추(출발·다시 하기·장착·닫기)·고른 것 표시·레벨·경험치.  보라 = 특별한 것(영겁의 굴레·특성·광고 보상·조합·어둠 결정).
+   노랑 = 보상에만(희귀 선택지·최고 기록·전설 장비).  판: 청록→보라로 흐르는 얇은 빛 테두리 + 위쪽 가운데 빛 줄 + 유리 같은 단추. */
+:root{
+  --teal1:#45f0da;--teal2:#16b4c7;--tealD:#0a7c8c;--vio1:#a98dff;--vio2:#6d4fe8;--vioD:#40299e;
+  --tealbtn:linear-gradient(180deg,#4ff2dd 0%,#18b6c9 100%);--viobtn:linear-gradient(180deg,#ad92ff 0%,#6c4ee6 100%);
+}
+/* 제목 글자: 노랑 대신 흰빛 그라데이션 + 은은한 빛 */
+.gold{color:#fff;background:linear-gradient(180deg,#ffffff 35%,#cfe0ff 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none!important;filter:drop-shadow(0 2px 0 rgba(0,0,0,.45)) drop-shadow(0 0 14px rgba(110,150,255,.22))}
+#title .tlogo b,#lobby h1,#hubTop .hres b{background:linear-gradient(180deg,#ffffff 15%,#d9ceff 55%,#9d86ff 100%);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 3px 0 rgba(20,10,60,.65)) drop-shadow(0 0 22px rgba(150,120,255,.45))}
+#banner,#resTitle{background:linear-gradient(180deg,#ffffff 30%,#9ff7ea 100%);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 3px 0 rgba(0,0,0,.45)) drop-shadow(0 0 18px rgba(63,240,216,.35))}
+#bossName,#cineName{background:linear-gradient(180deg,#ffffff 25%,#ffb0b8 100%);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 2px 0 rgba(0,0,0,.5)) drop-shadow(0 0 16px rgba(255,80,100,.4))}
+/* 판(카드): 얇은 빛 테두리 + 위쪽 빛 줄 */
+.card{position:relative;border:1px solid transparent;border-radius:22px;
+  background:radial-gradient(120% 60% at 50% 0%,rgba(80,110,200,.16),rgba(0,0,0,0) 60%) padding-box,linear-gradient(180deg,rgba(28,34,68,.97),rgba(13,16,34,.97)) padding-box,
+    linear-gradient(150deg,rgba(69,240,218,.6),rgba(169,141,255,.35) 35%,rgba(255,255,255,.05) 65%,rgba(169,141,255,.3)) border-box;
+  box-shadow:0 24px 54px rgba(0,0,0,.55)}
+.card::before{content:'';display:block;position:absolute;top:-1px;left:24%;right:24%;width:auto;transform:none;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(69,240,218,0),#45f0da,rgba(69,240,218,0));box-shadow:0 0 12px rgba(69,240,218,.75);pointer-events:none}
+.overlay{background:radial-gradient(120% 90% at 50% 40%,rgba(8,10,24,.5),rgba(4,5,14,.82));-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+.eyebrow{color:#8ff3e6;background:rgba(69,240,218,.09);border:1px solid rgba(69,240,218,.25)}
+.lab{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#a9b6e2;letter-spacing:.01em}
+.lab::before{content:'';flex:none;width:3px;height:13px;border-radius:2px;background:var(--teal1);box-shadow:0 0 8px var(--teal1)}
+/* 단추: 주 단추 청록, 보조는 유리 */
+.go{border:0;color:#03221f;background:var(--tealbtn);box-shadow:0 3px 0 var(--tealD),0 8px 24px rgba(40,220,210,.28),inset 0 1px 0 rgba(255,255,255,.6)}
+.go:active{transform:translateY(2px);box-shadow:0 1px 0 var(--tealD),inset 0 1px 0 rgba(255,255,255,.6)}
+.ghost,#pauseBtn,#helpTabs button,.modes button,.seg button,#maps button{color:#e9edff;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.ghost:active,.modes button:active,.seg button:active,#maps button:active{transform:translateY(1px);background:rgba(255,255,255,.1)}
+.ghost.warn{background:linear-gradient(180deg,#ff6e7f,#e2445b);border-color:rgba(255,255,255,.18);box-shadow:0 3px 0 #9c2638,inset 0 1px 0 rgba(255,255,255,.3)}
+/* 고른 것: 청록 테 + 은은한 빛(노란 칠 대신) */
+.modes button[aria-pressed="true"],.seg button[aria-pressed="true"],#maps button[aria-pressed="true"],#helpTabs button.on{color:#e6fffb;background:rgba(69,240,218,.14);border:1px solid rgba(69,240,218,.85);box-shadow:0 0 16px rgba(69,240,218,.25),inset 0 0 14px rgba(69,240,218,.12)}
+#maps i{color:#8fa0d0}#maps button[aria-pressed="true"] i{color:#7ff5e4}
+/* 영겁의 굴레(보라) · 오늘의 도전(청록→보라) */
+#riftRow button{border:1px solid rgba(255,255,255,.18);background:var(--viobtn);box-shadow:0 3px 0 var(--vioD),0 8px 22px rgba(130,100,255,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+#dailyRow button{border:1px solid rgba(255,255,255,.18);background:linear-gradient(120deg,#27cfc8 0%,#5d7dff 55%,#8a5cff 100%);box-shadow:0 3px 0 #33318f,0 8px 22px rgba(90,120,255,.28),inset 0 1px 0 rgba(255,255,255,.3)}
+#riftRow button[aria-pressed="true"],#dailyRow button[aria-pressed="true"]{color:#fff;outline:2px solid rgba(255,255,255,.95);outline-offset:2px}
+#riftRow button[aria-pressed="true"]{background:var(--viobtn)}#dailyRow button[aria-pressed="true"]{background:linear-gradient(120deg,#27cfc8 0%,#5d7dff 55%,#8a5cff 100%)}
+#riftRow button[aria-pressed="true"] i,#dailyRow button[aria-pressed="true"] i{color:rgba(255,255,255,.9)}
+/* 광고 보상(보라) */
+#adBtn,.adgreen{border:1px solid rgba(255,255,255,.18);background:var(--viobtn);box-shadow:0 3px 0 var(--vioD),0 10px 24px rgba(130,100,255,.32),inset 0 1px 0 rgba(255,255,255,.35)}
+#adBtn:active,.adgreen:active{transform:translateY(2px);box-shadow:0 1px 0 var(--vioD)}
+/* 판 중 정보 */
+.lvb{color:#03221f;background:var(--tealbtn);box-shadow:0 2px 0 var(--tealD),0 0 14px rgba(69,240,218,.35),inset 0 1px 0 rgba(255,255,255,.6)}
+#pauseBtn{border-radius:50%}
+/* 선택 카드: 유리판 */
+.choice{border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(46,54,104,.92),rgba(28,33,68,.92));box-shadow:0 8px 20px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.07)}
+.choice:active{transform:translateY(2px);box-shadow:0 3px 10px rgba(0,0,0,.3)}
+.choice em.el{background:rgba(169,141,255,.9)}.choice em.sp{background:var(--teal1);color:#03221f}
+.choice.fuse{border-color:rgba(190,170,255,.6);background:linear-gradient(180deg,#5c45d6,#3d2aa0);box-shadow:0 8px 22px rgba(110,80,240,.35),inset 0 1px 0 rgba(255,255,255,.15)}
+/* 특성 · 결과 · 기타 */
+.talrow .ghost:not(:disabled){color:#fff;border-color:rgba(255,255,255,.18);background:var(--viobtn);box-shadow:0 2px 0 var(--vioD),inset 0 1px 0 rgba(255,255,255,.3)}
+.rtal{color:#d6caff;background:rgba(169,141,255,.1);border:1px solid rgba(169,141,255,.3)}
+.rstat.shard{border-color:rgba(190,170,255,.4);background:linear-gradient(180deg,#6a52e6,#4430b0)}
+.rstat.shard b{color:#fff}
+#note,#tut,#hubHint{border:1px solid rgba(69,240,218,.22)}
+.tfinger{background:var(--teal1);border:2px solid rgba(255,255,255,.8);box-shadow:0 0 14px var(--teal1)}
+#fade b{color:#e6fbff}
 </style>
 
 <div id="game">
@@ -584,5 +725,5 @@ body{word-break:keep-all;overflow-wrap:break-word}
 <script src="js/music.js"></script>
 <script src="js/main.js"></script>
 
-<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160051';</script>
+<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160224';</script>
 </html>

@@ -78,7 +78,7 @@ function drawGim(g){const c=ctx,x=g.x,y=g.y,b=Math.sin(g.t*2.4)*3;
     c.fillStyle='rgba(255,255,255,.75)';poly(c,[[x-3,y-10],[x-2,y-40],[x+2,y-44],[x+1,y-12]]);c.fill();lights.push([x,y-26,150+Math.sin(g.t*2)*10,.75]);}
   else if(g.k==='barrel'){const hot=g.fuse>=0&&Math.sin(g.t*30)>0;rr(c,x-17,y-40,34,40,7);inkF(c,hot?'#fff1c2':'#8a5a2c',3);
     for(const yy of[-31,-11]){rr(c,x-18,y+yy,36,5,2);inkF(c,'#4a3a32',2);}
-    c.font='900 15px "Jua","Malgun Gothic",sans-serif';c.textAlign='center';c.fillStyle=hot?'#e0524f':'#ffd27a';c.fillText('!',x,y-15);
+    c.font='900 15px "Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif';c.textAlign='center';c.fillStyle=hot?'#e0524f':'#ffd27a';c.fillText('!',x,y-15);
     c.lineWidth=2.5;c.strokeStyle=INK;c.beginPath();c.moveTo(x+4,y-40);c.quadraticCurveTo(x+10,y-50,x+6,y-54);c.stroke();if(g.fuse>=0)lights.push([x+6,y-54,90,.8]);}
   else if(g.k==='lamp'){const on=g.lit>0;rr(c,x-3,y-70,6,70,2);inkF(c,'#3a3550',2.4);rr(c,x-13,y-94,26,28,6);inkF(c,on?'#e9e2ff':'#4a4466',3);
     c.fillStyle=on?'#b8a6ff':'#2b2741';ell(c,x,y-80,6,8+(on?Math.sin(g.t*9)*1.5:0));c.fill();
