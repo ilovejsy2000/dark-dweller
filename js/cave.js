@@ -22,10 +22,10 @@ function cv2Rock(g,w,h,r,o){o=o||{};const n=9,pts=[];
   for(let i=0;i<n;i++){const a=Math.PI+i/(n-1)*Math.PI,j=.82+r()*.3;pts.push([Math.cos(a)*w*j,Math.min(0,Math.sin(a)*h*j)]);}
   pts[0][1]=0;pts[n-1][1]=0;
   const base=o.base||'#3a3456',top=o.top||'#575078',warm=o.warm||0,ink=o.ink===undefined?3:o.ink;
-  poly(g,pts);g.fillStyle=base;g.fill();
-  g.save();poly(g,pts);g.clip();
+  blob(g,pts);g.fillStyle=base;g.fill(); /* 11-16 ②: 곧은 변(poly) 대신 둥근 곡선(blob) — 대표님 "너무 각져 있어" */
+  g.save();blob(g,pts);g.clip();
   /* 윗면: 위쪽 점들을 조금 내려 안쪽 면을 만든다 */
-  g.beginPath();g.moveTo(pts[1][0]*.92,pts[1][1]*.9);for(let i=2;i<n-1;i++)g.lineTo(pts[i][0]*.86,pts[i][1]*.96+h*.06);for(let i=n-2;i>=1;i--)g.lineTo(pts[i][0]*.7,pts[i][1]*.55);g.closePath();g.fillStyle=top;g.fill();
+  {const tp=[];for(let i=1;i<n-1;i++)tp.push([pts[i][0]*.86,pts[i][1]*.96+h*.06]);for(let i=n-2;i>=1;i--)tp.push([pts[i][0]*.66,pts[i][1]*.5]);blob(g,tp);g.fillStyle=top;g.fill();}
   /* 결: 짧은 금 두세 개 */
   g.lineWidth=1.6;g.strokeStyle='rgba(10,8,22,.45)';for(let i=0;i<2+(r()*2|0);i++){const x=(r()-.5)*w*1.1,y=-r()*h*.8;g.beginPath();g.moveTo(x,y);g.lineTo(x+(r()-.5)*w*.4,y+h*.18*(.5+r()));g.stroke();}
   /* 모닥불 쪽 따뜻한 테(warm: -1 왼쪽, 1 오른쪽, 0 위쪽 정면) */
@@ -33,7 +33,7 @@ function cv2Rock(g,w,h,r,o){o=o||{};const n=9,pts=[];
   /* 아래쪽 그늘 */
   const sg=g.createLinearGradient(0,-h*.35,0,0);sg.addColorStop(0,'rgba(8,6,18,0)');sg.addColorStop(1,'rgba(8,6,18,.45)');g.fillStyle=sg;g.fillRect(-w*1.2,-h*.4,w*2.4,h*.42);
   g.restore();
-  if(ink){poly(g,pts);g.lineWidth=ink;g.strokeStyle=INK;g.stroke();}
+  if(ink){blob(g,pts);g.lineWidth=ink;g.strokeStyle=INK;g.stroke();}
 }
 /* 수정 무더기(벽에 박힌 것·바닥 것 같이 씀) */
 function cv2Crystal(g,col,sc,r){for(const[dx,h,lean]of[[-13,30,-.4],[0,48,0],[12,28,.38],[-5,20,-.15]]){g.save();g.translate(dx*sc,0);g.rotate(lean+(r()-.5)*.1);const H=h*sc,W=6.5*sc;
@@ -64,9 +64,10 @@ function makeCaveBase(){
   for(const[x,y,col,sc]of[[-250,-330,'#7fe3ff',1],[-150,-420,'#b678ff',.8],[205,-345,'#b678ff',1.05],[90,-430,'#7fe3ff',.7],[-330,-120,'#ffd56a',.85],[330,-90,'#7fe3ff',.9],[-20,-470,'#b678ff',.65]]){
     g.save();g.translate(x,y);cv2Crystal(g,col,sc,r);g.restore();CV2.crystals.push({x,y,col,sc});}
   /* 5. 바닥 */
+  /* 11-16 ②(대표님 "출구가 이상하다, 매끄럽게"): 출구 길을 곧은 변의 사다리꼴 대신, 바닥과 같은 색의 둥글고 끝이 흐린 덩어리로. 바닥보다 먼저 칠해 경계선이 생기지 않는다 */
+  g.save();g.translate(0,300);g.scale(1,.72);{const pg=g.createRadialGradient(0,0,0,0,0,175);pg.addColorStop(0,'#3b3454');pg.addColorStop(.45,'#3b3454');pg.addColorStop(.75,'rgba(59,52,84,.55)');pg.addColorStop(1,'rgba(59,52,84,0)');g.fillStyle=pg;ell(g,0,0,175,175);g.fill();}g.restore();
   cv2FloorPath(g,0);g.fillStyle='#3b3454';g.fill();
-  {const pg=g.createLinearGradient(0,290,0,430);pg.addColorStop(0,'#3b3454');pg.addColorStop(1,'rgba(59,52,84,0)');cv2Exit(g,CAVE.exitW+40,CAVE.exitW+120,CAVE.cy+CAVE.ry*.55,430);g.fillStyle=pg;g.fill();} /* 11-16: 출구 길은 짧게, 그 아래는 부드럽게 사라지는 바깥 풍경이 덮는다 */
-  g.save();cv2FloorPath(g,0);cv2Exit(g,CAVE.exitW+40,CAVE.exitW+120,CAVE.cy+CAVE.ry*.55,430,true);g.clip('nonzero');
+  g.save();cv2FloorPath(g,0);g.clip();
   /* 바닥 얼룩: 흙과 돌가루 */
   for(let i=0;i<150;i++){const x=(r()-.5)*720,y=CAVE.cy+(r()-.5)*560+r()*200;ell(g,x,y,16+r()*44,8+r()*20,r()*3);g.fillStyle=r()<.5?'rgba(255,240,220,.035)':'rgba(10,8,22,.10)';g.fill();}
   /* 모닥불 둘레 돌판 */
@@ -85,7 +86,9 @@ function makeCaveBase(){
   /* 모닥불의 따뜻한 바닥빛 */
   const fg=g.createRadialGradient(0,4,10,0,4,300);fg.addColorStop(0,'rgba(255,170,100,.28)');fg.addColorStop(.5,'rgba(255,140,80,.10)');fg.addColorStop(1,'rgba(255,140,80,0)');g.fillStyle=fg;g.fillRect(-320,-300,640,620);
   /* 가장자리 그늘: 벽 밑으로 스며들게 */
-  for(const[lw,al]of[[90,.10],[64,.12],[40,.14],[20,.18],[8,.22]]){cv2FloorPath(g,6);g.lineWidth=lw;g.strokeStyle=`rgba(8,6,18,${al})`;g.stroke();}
+  /* 출구 쪽(아래 가운데)은 그늘 띠를 긋지 않는다 — 출구를 가로지르는 선이 생기지 않게(띠 끝은 출구 기둥 뒤에 숨는다) */
+  for(const[lw,al]of[[90,.10],[64,.12],[40,.14],[20,.18],[8,.22]]){g.lineWidth=lw;g.strokeStyle=`rgba(8,6,18,${al})`;const gap=.62;
+    g.beginPath();for(let i=0;i<=100;i++){const a=Math.PI/2+gap+i/100*(TAU-2*gap),[x,y]=cv2FloorPt(a,6);i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();}
   g.restore();
   cv2Outside(g,r);
   /* 6. 바닥 위 소품: 통나무 의자 · 깔개 */
@@ -147,7 +150,7 @@ function makeCaveRocks(){
     const warm=-Math.sign(fx)*.8,sp=makeSprite(w*2+16,h+16,w+8,h+8,g=>cv2Rock(g,w,h,r,{warm}));caveRocks.push({kind:'rock',x:fx,y:fy+6,sp});}
   /* 출구 기둥: 사이로 걸어 나간다 */
   for(const sx of[-1,1]){const w=62,h=150,sp=makeSprite(w*2+16,h+16,w+8,h+8,g=>{cv2Rock(g,w,h,r,{base:'#36304f',top:'#4f4870',warm:-sx*.5});
-      g.fillStyle='rgba(140,180,255,.16)';poly(g,[[-sx*w*.9,-4],[-sx*w*.75,-h*.7],[-sx*w*.45,-h*.75],[-sx*w*.55,-4]]);g.fill();}); /* 달빛 받는 안쪽 면 */
+      g.fillStyle='rgba(140,180,255,.16)';blob(g,[[-sx*w*.86,-6],[-sx*w*.74,-h*.62],[-sx*w*.5,-h*.7],[-sx*w*.52,-6]]);g.fill();}); /* 달빛 받는 안쪽 면 */
     caveRocks.push({kind:'rock',x:sx*(CAVE.exitW+70),y:CAVE.cy+CAVE.ry+40,sp});}
   /* 바닥 위 작은 돌기둥(석순) 몇 개: 깊이감 */
   for(const[x,y,s]of[[-232,-96,1],[248,-60,.85],[-210,150,.8],[232,165,.9]]){const w=16*s,h=58*s,sp=makeSprite(w*2+16,h+16,w+8,h+8,g=>{poly(g,[[-w,0],[-w*.55,-h*.55],[-w*.1,-h],[w*.3,-h*.6],[w,0]]);g.fillStyle='#463f66';g.fill();g.lineWidth=2.6;g.strokeStyle=INK;g.stroke();poly(g,[[-w*.7,-2],[-w*.4,-h*.55],[-w*.12,-h*.9],[-w*.2,-2]]);g.fillStyle='rgba(255,170,110,.18)';g.fill();});

@@ -8,7 +8,7 @@
 /* ───── 한 판에만 걸리는 배율(제단의 계약·오늘의 도전) ───── */
 let RUN=runInit();
 function runInit(){return{ehp:1,edmg:1,spawn:1,xp:1,pdmg:1,php:1,taken:1,espd:1,eliteEvery:1,gobEvery:1,altarEvery:1,choice:0,
-  rerolls:tal('reroll'),revive:tal('revive'),shardBonus:0,shardGain:0,eliteLoot:0,daily:false,pacts:[],lastHurt:0,
+  rerolls:tal('reroll'),revive:tal('revive'),shardBonus:0,shardGain:0,dustBonus:0,dustGain:0,eliteLoot:0,daily:false,pacts:[],lastHurt:0,
   gobT:rand(80,130),altarT:150,altar:null,quest:null,questT:50,newCx:0};}
 
 /* ───── ① 특성 ───── */
@@ -33,16 +33,22 @@ const talCost=t=>Math.round(t.c*2.5*Math.pow(1.55,tal(t.id))); // 11-15 대표�
 function talentApply(s){for(const t of TALENTS){const l=tal(t.id);if(l&&t.ap)t.ap(s,l);}if(state==='play')s.hp*=RUN.php;}
 function metaRevive(){if(RUN.revive<=0)return false;RUN.revive--;P.hp=P.maxhp*.5;P.inv=2;uiBanner('불사 · 다시 일어섭니다');ring(P.x,P.y-20,20,700,'#ffe08a');flash(P.x,P.y-20,500,.5);SFX.level();
   for(const e of enemies){const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy)||1;if(d<260&&!e.boss){e.kx+=dx/d*600;e.ky+=dy/d*600;}}return true;}
-/* 판이 끝날 때: 버틴 시간·처치·클리어로 어둠 결정 */
+/* 판이 끝날 때. 어둠 결정(특성 재료)은 오늘의 도전·영겁의 굴레에서만(11-16 대표님). 보통 맵은 장비와 마력 가루만 */
+const hardRun=()=>!!(RUN.daily||rift);
 function metaRunEnd(win){
-  const mi=mapIdx();let n=Math.floor(runT/60*4)+Math.floor(kills/50)+RUN.shardBonus;
-  if(win)n+=rift?10*rift.tier:25+15*Math.max(0,mi);
+  let n=0,du=RUN.dustBonus||0;
+  const today0=dayKey(),dayShardDone=RUN.daily&&SAVE.dailyShard===today0; /* 11-16 대표님 "하루 한 번만": 오늘의 도전의 버틴 만큼 결정은 그날 첫 판에서만 */
+  if(hardRun()&&!dayShardDone){n=Math.floor(runT/60*4)+Math.floor(kills/50)+RUN.shardBonus;if(win&&rift)n+=10*rift.tier;}
+  if(RUN.daily)SAVE.dailyShard=today0;
+  if(RUN.daily)du+=Math.floor(runT/60*6)+Math.floor(kills/40);
   const today=dayKey();
-  if(RUN.daily&&win&&(!SAVE.daily||SAVE.daily.done!==today)){SAVE.daily={done:today};n+=80;addLoot(makeItem(3,curFloor()));RUN.dailyPrize=1;}
-  RUN.shardGain=n;SAVE.shard=(SAVE.shard||0)+n;SAVE.runs=(SAVE.runs||0)+1;
+  /* 오늘의 도전 첫 클리어: 신화 장비 확정(창고가 꽉 차도 넣는다) + 결정 80 + 가루 150 */
+  if(RUN.daily&&win&&(!SAVE.daily||SAVE.daily.done!==today)){SAVE.daily={done:today};n+=80;du+=150;const it=makeItem(4,curFloor());if(!addLoot(it)){SAVE.stash.push(it);runLoot.push(it);cxGear(it);}RUN.dailyPrize=1;}
+  setTimeout(()=>{if(typeof rankAfterRun==='function')rankAfterRun(win);},0);
+  RUN.shardGain=n;RUN.dustGain=du;SAVE.shard=(SAVE.shard||0)+n;SAVE.dust=(SAVE.dust||0)+du;SAVE.runs=(SAVE.runs||0)+1;
   if(RUN.newbie&&runT>120)for(let i=0;i<2;i++)addLoot(makeItem(rollGrade(1,lootBoost()+.5),curFloor())); // 4회차: 장비가 약한 동안 덤 장비
 }
-function metaResult(){if(RUN.dailyPrize)$('resSum').textContent+=' · 오늘의 도전 보상: 결정 80 + 전설 장비';}
+function metaResult(){const s=$('resSum');if(RUN.dustGain&&hardRun())s.textContent+=` · 마력 가루 +${RUN.dustGain}`;if(RUN.dailyPrize)s.textContent+=' · 오늘의 도전 보상: 신화 장비 + 결정 80 + 가루 150';}
 
 /* ───── ② 보물 고블린 ───── */
 ET.tgob={...ET.goblin,art:['d',2,66],n:'보물 고블린',ai:'flee',r:16,hp:900,spd:128,dmg:0,xp:20,anim:3.4,kb:.5,harmless:true,tint:'rgba(255,196,40,.5)',light:110,deb:['#ffd56a','#c9962e','#fff0c2']};
@@ -57,7 +63,7 @@ function fleeAI(e,dx,dy,d,dt){
 }
 function goblinLoot(e){for(let i=0;i<3;i++)dropItem(e.x,e.y,rollGrade(1,lootBoost()+2),i*.1);
   for(let i=0;i<30;i++)gems.push({x:e.x+rand(-40,40),y:e.y+rand(-28,28),v:Math.ceil(3*DIFF.xp(runT/60)),t:0,pull:0});
-  RUN.shardBonus+=10;uiBanner('보물 고블린 처치 · 어둠 결정 +10');SFX.loot(4);flash(e.x,e.y-20,380,.4);ring(e.x,e.y,16,520,'#ffd56a');ember(e.x,e.y-20,24,30,140,'#ffd56a');}
+  if(hardRun()){RUN.shardBonus+=10;uiBanner('보물 고블린 처치 · 어둠 결정 +10');}else{RUN.dustBonus+=20;uiBanner('보물 고블린 처치 · 마력 가루 +20');}SFX.loot(4);flash(e.x,e.y-20,380,.4);ring(e.x,e.y,16,520,'#ffd56a');ember(e.x,e.y-20,24,30,140,'#ffd56a');}
 
 /* ───── ② 갈림길 제단: 저주 하나를 받고 보상 하나를 얻는다 ───── */
 const PACTS=[
@@ -174,8 +180,8 @@ function cxAll(){return{
   f:Object.keys(ACTIVES).filter(k=>ACTIVES[k].fuse),
   g:[].concat(...Object.keys(LEGENDS).map(t=>LEGENDS[t].map((L,i)=>`${t}:l${i}`)),...Object.keys(MYTHS).map(t=>MYTHS[t].map((M,i)=>`${t}:m${i}`)))};}
 function cxSee(cat,key){const C=SAVE.cx||(SAVE.cx={m:{},f:{},g:{},done:{}});if(C[cat][key])return;C[cat][key]=1;
-  if(state==='play'){RUN.newCx++;RUN.shardBonus+=2;}
-  const all=cxAll()[cat];if(!C.done[cat]&&all.every(k=>C[cat][k])){C.done[cat]=1;SAVE.shard=(SAVE.shard||0)+50;if(state==='play')uiBanner('도감 완성 · 어둠 결정 +50');}}
+  if(state==='play'){RUN.newCx++;if(hardRun())RUN.shardBonus+=2;else RUN.dustBonus+=3;}
+  const all=cxAll()[cat];if(!C.done[cat]&&all.every(k=>C[cat][k])){C.done[cat]=1;SAVE.dust=(SAVE.dust||0)+150;if(state==='play')uiBanner('도감 완성 · 마력 가루 +150');}}
 function cxGear(it){if(it.gi===3)cxSee('g',`${it.t}:l${it.lg}`);else if(it.gi===4)cxSee('g',`${it.t}:m${it.my}`);}
 const cxName=k=>{const[t,c]=k.split(':'),i=+c.slice(1);return c[0]==='l'?LEGENDS[t][i].n:MYTHS[t][i].n;};
 
@@ -207,15 +213,15 @@ function metaLobbyRefresh(){
   $('talBtn').textContent=SAVE.shard?`특성 ${SAVE.shard}`:'특성';
   if(dailySel){show('modes',false);show('tierRow',false);$('modeLab').textContent='오늘의 규칙';$('riftBtn').setAttribute('aria-pressed',false);
     $('mapDesc').textContent=`${MAPS[p.map].k}에서 10분을 버티고 끝 보스를 잡으세요. `+p.mods.map(m=>`${m.n}: ${m.d}.`).join(' ');
-    $('best').textContent=done?'오늘 보상은 이미 받았습니다. 다시 해도 결정은 얻습니다.':'처음 깨면 어둠 결정 80 + 전설 장비 하나.';}
+    const sh=SAVE.dailyShard===dayKey();$('best').textContent=done?'오늘 보상은 모두 받았습니다. 다시 하면 마력 가루만 얻습니다.':sh?'오늘 어둠 결정은 받았습니다. 깨면 신화 장비 1개 확정 + 결정 80 + 가루 150.':'깨면 신화 장비 1개 확정 + 어둠 결정 80 + 마력 가루 150. 첫 판은 버틴 만큼 결정도 얻습니다(하루 한 번).';}
 }
 const TAL_ICON={hp:'p_vigor',dmg:'p_might',def:'p_hide',regen:'p_regen',move:'p_swift',pick:'p_magnet',xp:'p_learn',cdr:'p_focus',crit:'p_keen',reroll:'p_luck',rare:'p_luck',revive:'golden',choice:'p_learn'};
-function renderTal(){const box=$('talList');box.innerHTML='';$('talShard').textContent=`어둠 결정 ${SAVE.shard||0}`;
+function renderTal(){const box=$('talList');box.innerHTML='';$('talShard').textContent=`어둠 결정 ${SAVE.shard||0} · 오늘의 도전·영겁의 굴레에서 얻습니다`;
   for(const t of TALENTS){const l=tal(t.id),c=talCost(t),row=el('div','talrow'+(l>=t.max?' max':''));const ic=el('img','talic');ic.src=skillIconURL(TAL_ICON[t.id]||'p_might');ic.alt='';row.append(ic);const tx=el('div');tx.append(el('b',null,t.n),el('span','lv',t.max===Infinity?`${l}단계`:`${l} / ${t.max}`),el('p',null,t.d));
     const b=btn(l>=t.max?'최대':`올리기 ${c}`,()=>{if(tal(t.id)>=t.max||(SAVE.shard||0)<c)return;SAVE.shard-=c;(SAVE.tal||(SAVE.tal={}))[t.id]=l+1;saveNow();SFX.level();renderTal();},'ghost sm');
     if(l>=t.max||(SAVE.shard||0)<c)b.disabled=true;row.append(tx,b);box.append(row);}}
 function renderCx(){const C=SAVE.cx||(SAVE.cx={m:{},f:{},g:{},done:{}}),A=cxAll(),box=$('cxList');box.innerHTML='';
-  const sec=(title,cat)=>{const n=A[cat].filter(k=>C[cat][k]).length;box.append(el('div','cxh',`${title} ${n} / ${A[cat].length}`+(C.done[cat]?' · 완성':' · 다 모으면 결정 +50')));const g=el('div','cxg');box.append(g);return g;};
+  const sec=(title,cat)=>{const n=A[cat].filter(k=>C[cat][k]).length;box.append(el('div','cxh',`${title} ${n} / ${A[cat].length}`+(C.done[cat]?' · 완성':' · 다 모으면 마력 가루 +150')));const g=el('div','cxg');box.append(g);return g;};
   let g=sec('적','m');for(const k of A.m){const t=el('div','cxt'+(C.m[k]?'':' no'));{const im=el('img');im.src=mobURL(k);im.alt='';t.append(im);}t.append(el('small',null,C.m[k]?ET[k].n:'???'));g.append(t);}
   g=sec('조합 스킬','f');for(const k of A.f){const t=el('div','cxt'+(C.f[k]?'':' no'));const im=el('img');im.src=skillIconURL(k);im.alt='';t.append(im,el('small',null,C.f[k]?ACTIVES[k].n:'???'));g.append(t);}
   g=sec('전설 · 신화 장비','g');g.classList.add('names');for(const k of A.g){const my=k.split(':')[1][0]==='m',s=el('span',C.g[k]?(my?'my':'lg'):'no',C.g[k]?cxName(k):'???');g.append(s);}}

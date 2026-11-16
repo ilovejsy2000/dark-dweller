@@ -90,5 +90,5 @@ function gimGlow(){for(const g of gims){if(g.k==='altar'&&g.cd<=0)glow(g.x,g.y-6
 function gimScreen(){if(gimMap()!==1||!(gimEvT>0)||state!=='play')return;const a=Math.min(1,gimEvT/2,(14-gimEvT)/1.5);ctx.save();ctx.setTransform(DPR,0,0,DPR,0,0);ctx.globalAlpha=.55*a;ctx.strokeStyle='#e6f2ff';ctx.lineWidth=1.6;ctx.beginPath();
   for(let i=0;i<70;i++){const s=(i*97.3)%1,x=((i*53.7+clock*420)%(W+200))-100,y=((i*131.1+clock*260*(1+s))%(H+100))-50;ctx.moveTo(x,y);ctx.lineTo(x-14-s*10,y-6);}ctx.stroke();
   ctx.globalAlpha=.08*a;ctx.fillStyle='#dfefff';ctx.fillRect(0,0,W,H);ctx.restore();}
-function gimMinimap(mx,my){for(const g of gims){if(g.k==='barrel')continue;const px=mx(g.x),py=my(g.y);
+function gimMinimap(mx,my){for(const g of gims){if(g.k==='barrel'||g.k==='crystal')continue; /* 11-16 대표님: 빙결 수정은 미니맵에서 뺌(표시가 너무 많음) */const px=mx(g.x),py=my(g.y);
   ctx.fillStyle=g.k==='altar'?(g.cd<=0?'#6fd6c8':'#4a4f66'):g.k==='crystal'?'#bfe9ff':(g.lit>0?'#b8a6ff':'#6a6090');ell(ctx,px,py,2.2,2.2);ctx.fill();}}

@@ -64,7 +64,7 @@ function drawMinimap(){
   ctx.lineWidth=1;ctx.strokeStyle='rgba(154,163,191,.16)';ctx.beginPath();ctx.moveTo(x0+s/2,y0+5);ctx.lineTo(x0+s/2,y0+s-5);ctx.moveTo(x0+5,y0+s/2);ctx.lineTo(x0+s-5,y0+s/2);ctx.stroke();
   ctx.fillStyle='#ff9a3c';ell(ctx,mx(0),my(0),2.8,2.8);ctx.fill();
   ctx.fillStyle='#ffd27a';ctx.strokeStyle=INK;ctx.lineWidth=1;for(const c of chests){const px=mx(c.x),py=my(c.y);ctx.fillRect(px-2.4,py-2.4,4.8,4.8);ctx.strokeRect(px-2.4,py-2.4,4.8,4.8);}
-  for(const d of drops)if(d.landed&&d.it.gi>=3){ctx.fillStyle=gradeColor(d.it);ell(ctx,mx(d.x),my(d.y),2,2);ctx.fill();}
+  for(const d of drops)if(d.landed&&d.it.gi>=4){ctx.fillStyle=gradeColor(d.it);ell(ctx,mx(d.x),my(d.y),2,2);ctx.fill();} /* 11-16 대표님: 미니맵엔 신화 장비만 */
   for(const g of guards){const px=mx(g.x),py=my(g.y),r=(g.sleep?3.6:3.6+Math.sin(clock*8))+(g.tier||0)*.3;poly(ctx,[[px,py-r],[px+r,py],[px,py+r],[px-r,py]]);ctx.fillStyle='#e0524f';ctx.fill();ctx.lineWidth=1;ctx.strokeStyle=INK;ctx.stroke();}
   if(bossRef&&!bossRef.dead&&!bossRef.guard){ctx.lineWidth=1.6;ctx.strokeStyle='#ff9a3c';ell(ctx,mx(bossRef.x),my(bossRef.y),4,4);ctx.stroke();}
   gimMinimap(mx,my);metaMinimap(mx,my);

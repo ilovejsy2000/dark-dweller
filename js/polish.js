@@ -50,7 +50,7 @@ function resultExtra(win){
   const box=$('resStats');box.innerHTML='';
   const card=(label,val,cls)=>{const c=el('div','rstat'+(cls?' '+cls:''));c.append(el('small',null,label),el('b',null,val));box.append(c);return c;};
   card('버틴 시간',mmss(runT));card('처치',String(kills));card('레벨',String(P.level));
-  const sc=card('어둠 결정','+0','shard');let v=0;const goal=RUN.shardGain||0,st=performance.now();
+  const hard=hardRun(),sc=card(hard?'어둠 결정':'마력 가루','+0','shard');let v=0;const goal=(hard?RUN.shardGain:RUN.dustGain)||0,st=performance.now();
   const up=()=>{const q=Math.min(1,(performance.now()-st)/900);v=Math.round(goal*q*(2-q));sc.lastChild.textContent='+'+v;if(q<1)requestAnimationFrame(up);};requestAnimationFrame(up);
   $('resBest').hidden=!RUN.newBest;
   const can=TALENTS.some(t=>tal(t.id)<t.max&&(SAVE.shard||0)>=talCost(t));$('resTal').hidden=!can;

@@ -548,6 +548,21 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 #note,#tut,#hubHint{border:1px solid rgba(69,240,218,.22)}
 .tfinger{background:var(--teal1);border:2px solid rgba(255,255,255,.8);box-shadow:0 0 14px var(--teal1)}
 #fade b{color:#e6fbff}
+/* 11-16 순위 창 */
+.rankcard{max-width:420px}
+.rkjoin{display:flex;gap:8px}.rkjoin input{flex:1;min-width:0;font:700 15px var(--font-body);color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:9px 12px;outline:none}.rkjoin input:focus{border-color:var(--teal1);box-shadow:0 0 0 3px rgba(69,240,218,.18)}
+.rkmsg{min-height:1em;font-size:12.5px;color:#ff9aa4}
+.rktabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.rktabs button{font:800 14px var(--font-display);padding:8px 2px;border-radius:12px}
+.rktabs button.on{color:#e6fffb;background:rgba(69,240,218,.14);border:1px solid rgba(69,240,218,.85);box-shadow:0 0 16px rgba(69,240,218,.25)}
+.rkslots{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}.chipbtn{font:700 12.5px var(--font-body);color:#d8def8;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:99px;padding:5px 10px;cursor:pointer}
+.chipbtn.on{color:#1b0f3f;background:var(--viobtn);border-color:transparent}
+.rklist{display:grid;gap:5px;max-height:44vh;overflow:auto;text-align:left;padding-right:2px}
+.rkrow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+.rkrow .rkn{font:900 15px var(--font-display);color:#9ea6c9;text-align:center}.rkrow .rknm{font-weight:700;color:#f0f3ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rkrow .rkv{font:800 13.5px var(--font-body);color:#cfe9ff;white-space:nowrap}.rkg{font-style:normal;font-weight:900}
+.rkrow.top1 .rkn{color:#ffd24a}.rkrow.top2 .rkn{color:#d9e2f2}.rkrow.top3 .rkn{color:#e8a36a}
+.rkrow.me{border-color:rgba(69,240,218,.7);background:rgba(69,240,218,.1)}
+.rkempty{padding:18px 6px;color:#9ea6c9;text-align:center}
+.rkmine{font-weight:800;color:#8ff3e6;min-height:1em}
 </style>
 
 <div id="game">
@@ -572,7 +587,7 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
     <div id="toasts" aria-live="polite"></div>
   </div>
 
-  <div id="hubTop" hidden><div class="hres"><b class="gold">다크 드웰러</b><span id="hubRes"></span></div><div class="hbtns"><button class="ghost" id="helpBtn" type="button">설명</button><button class="ghost" id="cfgBtn" type="button">설정</button><span hidden><button id="invBtn" type="button"></button><button id="talBtn" type="button"></button><button id="cxBtn" type="button"></button></span></div></div>
+  <div id="hubTop" hidden><div class="hres"><b class="gold">다크 드웰러</b><span id="hubRes"></span></div><div class="hbtns"><button class="ghost" id="rankBtn" type="button">순위</button><button class="ghost" id="helpBtn" type="button">설명</button><button class="ghost" id="cfgBtn" type="button">설정</button><span hidden><button id="invBtn" type="button"></button><button id="talBtn" type="button"></button><button id="cxBtn" type="button"></button></span></div></div>
   <button id="hubAct" class="go" type="button" hidden></button>
   <div id="hubHint" hidden>동굴 안을 걸어 보세요. 대장간 · 창고 · 제단 · 비석에 다가가면 열리고, 아래 출구로 나가면 출발합니다.</div>
   <div id="fade" hidden><b id="fadeTxt"></b></div>
@@ -624,7 +639,7 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 
   <div id="cx" class="overlay" hidden>
     <div class="card">
-      <div class="eyebrow">처음 본 것마다 어둠 결정 +2</div>
+      <div class="eyebrow">처음 본 것마다 마력 가루 +3 · 도전·굴레에선 어둠 결정 +2</div>
       <h2 class="gold">도감</h2>
       <div id="cxList"></div>
       <div class="btns"><button class="go sm" id="cxClose" type="button">닫기</button></div>
@@ -681,6 +696,21 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
     </div>
   </div>
 
+  <div id="rank" class="overlay" hidden>
+    <div class="card rankcard">
+      <div class="eyebrow">온라인 순위</div>
+      <h2 class="gold">순위</h2>
+      <div id="rankWho" class="sub"></div>
+      <div id="rankJoinBox" class="rkjoin" hidden><input id="rankName" maxlength="12" autocomplete="off" placeholder="닉네임 (2~12자)" aria-label="닉네임"><button class="go sm" id="rankJoin" type="button">등록</button></div>
+      <div id="rankMsg" class="rkmsg"></div>
+      <div class="seg rktabs"><button id="rkRift" type="button">영겁의 굴레</button><button id="rkTotal" type="button">장비 합계</button><button id="rkSlot" type="button">부위별</button></div>
+      <div id="rankSlots" class="rkslots" hidden></div>
+      <div id="rankList" class="rklist"></div>
+      <div id="rankMine" class="rkmine"></div>
+      <div class="btns"><button class="go sm" id="rankClose" type="button">닫기</button></div>
+    </div>
+  </div>
+
   <div id="cfg" class="overlay" hidden>
     <div class="card">
       <h2 class="gold">설정</h2>
@@ -721,9 +751,10 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 <script src="js/meta.js"></script>
 <script src="js/hub.js"></script>
 <script src="js/cave.js"></script>
+<script src="js/rank.js"></script>
 <script src="js/polish.js"></script>
 <script src="js/music.js"></script>
 <script src="js/main.js"></script>
 
-<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160224';</script>
+<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160332';</script>
 </html>

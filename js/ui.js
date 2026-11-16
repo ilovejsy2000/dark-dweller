@@ -220,7 +220,7 @@ function closeCfg(){show('cfg',false);if(cfgHeld){paused=false;cfgHeld=false;}}
 function uiInit(){
   MAPS.forEach((m,i)=>{const b=btn('',()=>{mapSel=i;riftSel=false;dailySel=false;SFX.ui();soundOn();setMap(i);saveNow();refreshLobby();},'');b.id='map-'+i;b.append(el('b',null,m.k),el('i',null,stars(m.star)));$('maps').append(b);});
   MODES.forEach((m,i)=>{const b=btn(m.k,()=>{modeSel=i;SFX.ui();soundOn();refreshLobby();},'');b.id='mode-'+i;$('modes').append(b);});
-  riftLobbyInit();metaLobbyInit();hubInit();titleInit();reviveInit();resultInit();
+  riftLobbyInit();metaLobbyInit();hubInit();titleInit();reviveInit();resultInit();rankInit();
   for(const[k,label,vals]of OPTS){const row=el('div','row');row.append(el('span',null,label));const seg=el('div','seg');
     vals.forEach((v,i)=>{const b=btn(v,()=>{CFG[k]=i;applyCfg();soundOn();SFX.ui();if(k==='vib'&&i)buzz(30);},'');b.id=`cfg-${k}-${i}`;b.dataset.k=k;b.dataset.v=i;seg.append(b);});
     row.append(seg);$('cfgRows').append(row);}
