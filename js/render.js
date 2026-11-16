@@ -11,9 +11,14 @@ const heroIm=new Image();heroIm.src='img/hero.png';window.heroIm0=heroIm; /* 스
 function drawHero(g,o){
   const heroIm=o.im||window.heroIm0;if(!heroIm.complete||!heroIm.naturalWidth)return; /* o.im: 다른 그림(동료는 기본 방랑자) */
   const wp=o.t*10,st=o.move?Math.sin(wp):0,bob=o.move?Math.abs(st)*3.6:Math.sin(o.t*2.2)*1.2,sq=o.move?1+Math.abs(Math.cos(wp))*.045:1+Math.sin(o.t*2.2)*.014;
-  let rot=o.move?.06+st*.05:0;if(o.swing>=0){const e=1-Math.pow(1-o.swing,3);rot+=-.3+e*.52;}
+  let rot=o.move?.06+st*.05:0,lunge=0,sw=1;if(o.swing>=0){const q=o.swing,e=1-Math.pow(1-q,3);rot+=-.42+e*.8;lunge=Math.sin(q*Math.PI)*8;sw=1+Math.sin(q*Math.PI)*.08;}
   const h=60,w=h*heroIm.naturalWidth/heroIm.naturalHeight;
-  g.save();g.translate(0,-bob);g.rotate(rot);g.scale(1/sq,sq);g.imageSmoothingQuality='high';g.drawImage(heroIm,-w*.55,-h+2,w,h);g.restore();
+  g.save();g.translate(lunge,-bob);g.rotate(rot);g.scale(sw/sq,sq/sw);g.imageSmoothingQuality='high';g.drawImage(heroIm,-w*.55,-h+2,w,h);g.restore();
+  /* 11-16 대표님 "캐릭터가 손으로 공격하는 듯한 연출, 칼을 휘두른다던가": 휘두르는 동안 몸 앞에 칼 궤적 */
+  if(o.swing>=0&&o.swing<.85){const q=o.swing,a0=-2.1+q*.4,a1=a0+.4+q*2.4,R=30+q*6,al=(1-q/.85);g.save();g.translate(lunge+6,-30);g.lineCap='round';
+    g.globalAlpha=al*.9;g.lineWidth=9;g.strokeStyle='rgba(255,255,255,.35)';g.beginPath();g.arc(0,0,R,a0,a1);g.stroke();
+    g.lineWidth=5;g.strokeStyle=o.trail||'#e9fbff';g.beginPath();g.arc(0,0,R,a0+(a1-a0)*.25,a1);g.stroke();
+    g.lineWidth=2.4;g.strokeStyle='#ffffff';g.beginPath();g.arc(0,0,R+1,a0+(a1-a0)*.6,a1);g.stroke();g.globalAlpha=1;g.restore();}
 }
 
 /* 스킬 그림 */

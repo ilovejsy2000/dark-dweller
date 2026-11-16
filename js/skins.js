@@ -28,7 +28,8 @@ const SKINS=[
   {id:'maengju',n:'무림맹주',tier:3,price:0,img:'img/skin_maengju.png'},
 ];
 const SKIN=Object.fromEntries(SKINS.map(s=>[s.id,s]));
-const skinOwned=id=>id==='base'||(SAVE.skins||[]).includes(id);
+const SKIN_PAID_OPEN=true; /* 출시 때 false 로 바꾸면 유료 스킨이 다시 잠긴다 */
+const skinOwned=id=>id==='base'||(SAVE.skins||[]).includes(id)||(SKIN_PAID_OPEN&&SKIN[id]&&SKIN[id].tier===3);
 const skinCur=()=>SKIN[SAVE.skin]&&skinOwned(SAVE.skin)?SAVE.skin:'base';
 /* 동료는 늘 기본 그림 */
 const baseHeroIm=new Image();baseHeroIm.src='img/hero.png';
@@ -56,7 +57,7 @@ function renderSkins(){
   else if(s.tier===3){b.textContent='곧 판매 (유료)';b.disabled=true;b.className='go vio';}
   else{b.textContent=`사기 · 가루 ${s.price}`;if((SAVE.dust||0)<s.price)b.className='go dim';}
   const box=$('skinGrid');box.innerHTML='';
-  for(const t of[0,1,2,3]){const list=SKINS.filter(k=>k.tier===t);if(!list.length)continue;box.append(el('div','skh',t===0?'기본':t===1?'일반 · 가루로 사기':t===2?'고급 · 가루를 많이 모아서':'유료 · 출시 때 판매'));
+  for(const t of[0,1,2,3]){const list=SKINS.filter(k=>k.tier===t);if(!list.length)continue;box.append(el('div','skh',t===0?'기본':t===1?'일반 · 가루로 사기':t===2?'고급 · 가루를 많이 모아서':(SKIN_PAID_OPEN?'유료 · 지금은 시험으로 무료':'유료 · 출시 때 판매')));
     const g=el('div','skg');box.append(g);
     for(const k of list){const c=el('button','skc t'+k.tier+(k.id===skinSel?' sel':'')+(k.id===cur?' on':'')+(skinOwned(k.id)?'':' lock'));c.type='button';const im=el('img');im.src=k.img;im.alt='';im.loading='lazy';c.append(im,el('span',null,k.n));
       if(!skinOwned(k.id))c.append(el('em',null,k.tier===3?'유료':k.price));c.addEventListener('click',()=>{SFX.ui();skinSel=k.id;renderSkins();});g.append(c);}}

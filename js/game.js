@@ -268,8 +268,7 @@ const ACTIVES={
   slash:{n:'베기',d:'가까운 적 쪽으로 넓게 벱니다.',cd:.85,
     ups:[['등 뒤도 함께 벱니다',{back:1}],['피해 +25%',{dmg:.25}],['베면서 검기를 날립니다',{wave:1}],['범위 +15%',{area:.15}],['한 번에 두 번 벱니다',{twin:1}],['쿨타임 -20%',{cd:.2}],['피해 +25%',{dmg:.25}],['피해 +30%',{dmg:.3}]],
     fire(p){const R=118*p.area*(1+.3*(FX.slashWide||0))*AREA,t=nearest(P.x,P.y,R+30);
-      if(!t){const f=nearest(P.x,P.y,330);if(!f)return false;const a=Math.atan2(f.y-12-(P.y-20),f.x-P.x);P.dir=Math.cos(a)>=0?1:-1;P.swing=0;SFX.slash(); // 멀면 검기만
-        shots.push({k:'crescent',x:P.x,y:P.y-20,vx:Math.cos(a)*560,vy:Math.sin(a)*560,a,life:.6,dmg:30*p.dmg*.75,r:28*p.area,hit:new Set()});return true;}
+      if(!t)return false; /* 11-16: 멀리 있는 적에게 검기를 날리던 것 뺌 — 가까이 와야 벤다 */
       const a=Math.atan2(t.y-P.y,t.x-P.x),dmg=30*p.dmg;P.dir=Math.cos(a)>=0?1:-1;P.swing=0;SFX.slash();
       doSlash(a,R,dmg);if(p.back)doSlash(a+Math.PI,R*.9,dmg*.8);onSlash2(a,R,dmg);relicOnSlash(a,dmg);if(nearest(P.x,P.y,R))freeze=Math.max(freeze,.018);
       if(p.wave)shots.push({k:'crescent',x:P.x,y:P.y-20,vx:Math.cos(a)*540,vy:Math.sin(a)*540,a,life:.6,dmg:dmg*.6,r:30*p.area,hit:new Set()});
