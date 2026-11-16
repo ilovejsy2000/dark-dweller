@@ -85,10 +85,10 @@ let modeSel=0,mapSel=0;
 const stars=n=>'★'.repeat(n)+'☆'.repeat(4-n);
 function bestText(){const M=MAPS[mapSel],k=mapSel===0?MODES[modeSel].k:M.k+'·'+MODES[modeSel].k,b=SAVE.best[k];if(!b)return'아직 기록이 없습니다.';return (b.win?'클리어 · ':'최고 기록 '+mmss(b.t)+' · ')+`처치 ${b.kills} · 레벨 ${b.lv}`;}
 function refreshLobby(){const M=MAPS[mapSel];MODES.forEach((m,i)=>{const b=$('mode-'+i);b.setAttribute('aria-pressed',i===modeSel);b.textContent=m.t<0?`클리어 · ${M.clear/60}분`:m.k;});MAPS.forEach((m,i)=>$('map-'+i).setAttribute('aria-pressed',!riftSel&&!dailySel&&i===mapSel));
-  $('mapDesc').textContent=M.d+(mapSel?` 적 체력 ${M.hp}배 · 공격 ${M.dmg}배, 높은 등급 장비가 더 잘 나옵니다.`:'')+(MODES[modeSel].t<0?` ${M.clear/60}분을 버티고 끝 보스를 잡으면 클리어입니다.`:'');$('best').textContent=bestText();riftLobbyRefresh();metaLobbyRefresh();}
+  $('mapDesc').textContent=M.d+(mapSel?` 적 체력 ${M.hp}배 · 공격 ${M.dmg}배, 높은 등급 장비가 더 잘 나옵니다.`:'')+(MODES[modeSel].t<0?` ${M.clear/60}분을 버티고 끝 보스를 잡으면 클리어입니다.`:'');$('best').textContent=bestText();riftLobbyRefresh();metaLobbyRefresh();matesLobbyRefresh();}
 function uiLobby(){for(const id of['hud','result','pause','lvl','inv','tip'])show(id,false);modeSel=SAVE.m2||0;mapSel=SAVE.map||0;if(MAP!==MAPS[mapSel])setMap(mapSel);refreshLobby();show('lobby',false);hubNear=null;show('hubAct',false);hubArrive();} // 거점 = 야영지(동굴 입구에서 맵 고르기)
 function uiStart(){soundOn();hubEnter=0;show('hubHint',false);if(!$('fade').classList.contains('out'))show('fade',false); // 들어오는 연출 중에 시작해도 검은 막이 남지 않게
-  if(dailySel)dailyStart();else if(riftSel&&riftOpen()){riftStartMap(riftTier);startRun(0,riftTier);}else{riftSel=false;setMap(mapSel);startRun(modeSel);}hudC={};show('bossBar',false);show('lvl',false);/* 앞 판에서 못 잡은 보스의 체력 띠가 남지 않게(11-15) */$('toasts').innerHTML='';show('lobby',false);show('result',false);show('hubTop',false);show('hubAct',false);show('hud',true);uiHud();if((SAVE.runs||0)>0)uiNote('공격은 자동입니다. 움직이기만 하세요.');tutStart();}
+  if(dailySel)dailyStart();else if(riftSel&&riftOpen()){riftStartMap(riftTier);startRun(0,riftTier);}else{riftSel=false;setMap(mapSel);startRun(modeSel);}hudC={};show('bossBar',false);show('lvl',false);/* 앞 판에서 못 잡은 보스의 체력 띠가 남지 않게(11-15) */$('toasts').innerHTML='';show('lobby',false);show('result',false);show('hubTop',false);show('hubAct',false);show('hud',true);uiHud();if((SAVE.runs||0)>0)uiNote('공격은 자동입니다. 움직이기만 하세요.');tutStart();matesBegin();}
 
 /* ───── 레벨업 선택: 액티브 → 패시브 ───── */
 let lvStep='act',choiceAt=0;
@@ -220,7 +220,7 @@ function closeCfg(){show('cfg',false);if(cfgHeld){paused=false;cfgHeld=false;}}
 function uiInit(){
   MAPS.forEach((m,i)=>{const b=btn('',()=>{mapSel=i;riftSel=false;dailySel=false;SFX.ui();soundOn();setMap(i);saveNow();refreshLobby();},'');b.id='map-'+i;b.append(el('b',null,m.k),el('i',null,stars(m.star)));$('maps').append(b);});
   MODES.forEach((m,i)=>{const b=btn(m.k,()=>{modeSel=i;SFX.ui();soundOn();refreshLobby();},'');b.id='mode-'+i;$('modes').append(b);});
-  riftLobbyInit();metaLobbyInit();hubInit();titleInit();reviveInit();resultInit();rankInit();
+  riftLobbyInit();metaLobbyInit();hubInit();titleInit();reviveInit();resultInit();rankInit();matesLobbyInit();skinInit();
   for(const[k,label,vals]of OPTS){const row=el('div','row');row.append(el('span',null,label));const seg=el('div','seg');
     vals.forEach((v,i)=>{const b=btn(v,()=>{CFG[k]=i;applyCfg();soundOn();SFX.ui();if(k==='vib'&&i)buzz(30);},'');b.id=`cfg-${k}-${i}`;b.dataset.k=k;b.dataset.v=i;seg.append(b);});
     row.append(seg);$('cfgRows').append(row);}

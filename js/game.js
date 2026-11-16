@@ -186,7 +186,7 @@ function spawn(type,o){
     flash:0,hitT:0,slow:0,stun:0,ice:0,weak:0,bt:0,bt2:0,ovT:0,dotT:0,dps:0,dotK:'fire',dotAcc:0,st:0,at:rand(1.5,4),at2:6,cx:0,cy:0,sx:0,sy:0,
     phase:Math.random(),dir:1,age:0,seed:Math.random()*9,dead:false,boss:o.boss||0,elite:!!T.elite,name:o.name||T.n,def:T.def||0,mres:T.mres||0,pst:0,rage:0,fade:0,lane:0};
   if(!o.at&&Math.hypot(e.x,e.y/.85)>WORLD_R-60){e.x=2*P.x-e.x;e.y=2*P.y-e.y;}if(!o.at)keepIn(e,60);
-  e.maxhp=e.hp;enemies.push(e);if(o.boss!==3)cxSee('m',type);/* 잠든 수호자는 깨어날 때 도감에 */return e;
+  e.maxhp=e.hp;enemies.push(e);mateAggro(e);if(o.boss!==3)cxSee('m',type);/* 잠든 수호자는 깨어날 때 도감에 */return e;
 }
 function pickSpawn(m){const pool=SPAWNS.filter(s=>m>=s.from),wt=s=>(MAP.w[s.type]||s.w)*spawnFade(s,m);let r=Math.random()*pool.reduce((a,s)=>a+wt(s),0);for(const s of pool){r-=wt(s);if(r<=0)return s.type;}return'moss';}
 function gainXp(v){
@@ -421,7 +421,7 @@ function update(dt){
 
   // 적
   const n=enemies.length;
-  for(let i=0;i<n;i++){const e=enemies[i],T=e.T;if(e.dead)continue;const dx=P.x-e.x,dy=P.y-e.y,d=Math.hypot(dx,dy)||1;
+  for(let i=0;i<n;i++){const e=enemies[i],T=e.T;if(e.dead)continue;if(e.mt&&(e.mt.down>0||!mates.includes(e.mt)))e.mt=null;const tg=e.mt||P,dx=tg.x-e.x,dy=tg.y-e.y,d=Math.hypot(dx,dy)||1; /* tg: 노리는 상대(주인공 또는 동료) */
     if(e.sleep){if(d<330&&!P.dead)wakeGuard(e);else continue;} // 잠든 수호자는 다가갈 때까지 가만히 있는다
     if(d>1500&&!e.boss){const a=Math.random()*TAU,rad=viewRad()+80;e.x=P.x+Math.cos(a)*rad;e.y=P.y+Math.sin(a)*rad*.85;continue;}
     e.age+=dt;e.flash-=dt;e.hitT-=dt;e.slow-=dt;e.bt-=dt;e.bt2-=dt;e.ovT-=dt;e.ice-=dt;
@@ -435,7 +435,7 @@ function update(dt){
     v*=(e.hitT>0?(e.elite?.9:.3):1)*(e.slow>0?(e.boss?.85:e.elite?.75:.55):1)*(burnT>0?1.15:1)*(P.dead?.3:1)*GIM.espd*RUN.espd;
     e.x+=(e.cx*v+e.kx)*dt;e.y+=(e.cy*v+e.ky)*dt;const dec=Math.exp(-dt*9);e.kx*=dec;e.ky*=dec;
     if(Math.abs(dx)>4)e.dir=dx>0?1:-1;if(v>0)e.phase+=T.anim*dt*(e.slow>0?.5:1)*(e.st===2?2.2:1);
-    if(d<e.r+13&&e.ai!=='caster'&&!T.harmless&&e.stun<=0&&!(e.fade>0))hurt(e.dmg*(e.st===2?1.5:1),!!T.magic);
+    if(d<e.r+13&&e.ai!=='caster'&&!T.harmless&&e.stun<=0&&!(e.fade>0)){if(tg===P)hurt(e.dmg*(e.st===2?1.5:1),!!T.magic);else mateHurt(tg,e.dmg*(e.st===2?1.5:1));}
     for(let j=i+1;j<n;j++){const o=enemies[j],ax=o.x-e.x,ay=o.y-e.y,rs=(e.r+o.r)*.85,q=ax*ax+ay*ay;
       if(q<rs*rs&&q>.01){const dd=Math.sqrt(q),ov=(rs-dd)/dd*.5,wa=e.elite?.1:o.elite?.9:.5;e.x-=ax*ov*wa;e.y-=ay*ov*wa;o.x+=ax*ov*(1-wa);o.y+=ay*ov*(1-wa);}}
   }
@@ -445,6 +445,7 @@ function update(dt){
   for(const w of warns)w.t-=dt;warns=warns.filter(w=>w.t>0);
 
   // 스킬
+  mateUpdate(dt);
   if(!P.dead&&!over)for(const id in P.act){const A=ACTIVES[id],p=P.pk[id];if(A.tick)A.tick(dt,p);
     if(A.cd){P.cds[id]=(P.cds[id]===undefined?.4:P.cds[id])-dt;if(P.cds[id]<=0)P.cds[id]=A.fire(p)?((FX.chronos&&Math.random()<.1*FX.chronos||FX.wudang&&Math.random()<.08*FX.wudang)?.25:cdOf(A.cd*(SKILL_HV[id]||1)*p.cd)):.15;}}
   if(!P.act.blade||P.dead)blades.length=0;if(!P.act.saw||P.dead)saws.length=0;

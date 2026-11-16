@@ -563,6 +563,25 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 .rkrow.me{border-color:rgba(69,240,218,.7);background:rgba(69,240,218,.1)}
 .rkempty{padding:18px 6px;color:#9ea6c9;text-align:center}
 .rkmine{font-weight:800;color:#8ff3e6;min-height:1em}
+/* 11-16 스킨 창 */
+.skincard{max-width:440px;max-height:92vh}
+.skbig{display:grid;justify-items:center;gap:4px;padding:10px 0 2px;background:radial-gradient(60% 70% at 50% 60%,rgba(120,140,255,.18),rgba(0,0,0,0) 70%)}
+.skbig img{height:min(30vh,200px);object-fit:contain;filter:drop-shadow(0 8px 14px rgba(0,0,0,.5))}
+.skbig div{display:flex;align-items:center;gap:8px}.skbig b{font:900 20px var(--font-display);color:#fff}
+.sktier{font:800 11.5px var(--font-body);padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.08);color:#cfd5f0}
+.sktier.t1{background:rgba(69,240,218,.14);color:#8ff3e6}.sktier.t2{background:rgba(169,141,255,.18);color:#d6caff}.sktier.t3{background:linear-gradient(90deg,#ffd24a,#ff9a5c);color:#2b1a00}
+.go.vio{background:var(--viobtn);color:#fff;box-shadow:0 3px 0 var(--vioD)}.go.dim{filter:saturate(.4) brightness(.8)}
+.skgrid{display:grid;gap:6px;overflow:auto;max-height:34vh;text-align:left;padding-right:2px}
+.skh{font:800 12.5px var(--font-body);color:#a9b6e2;margin-top:4px}
+.skg{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+.skc{position:relative;display:grid;justify-items:center;gap:2px;padding:6px 2px 5px;border-radius:12px;cursor:pointer;color:#e9edff;font:700 11px var(--font-body);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+.skc img{height:58px;object-fit:contain}.skc span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.skc.t2{border-color:rgba(169,141,255,.35)}.skc.t3{border-color:rgba(255,200,80,.45);background:rgba(255,190,60,.06)}
+.skc.lock img{filter:brightness(.55) saturate(.6)}.skc em{position:absolute;top:3px;right:4px;font:800 9.5px var(--font-body);font-style:normal;color:#ffe9a8;background:rgba(0,0,0,.45);border-radius:6px;padding:1px 4px}
+.skc.sel{border-color:var(--teal1);box-shadow:0 0 0 1px var(--teal1),0 0 14px rgba(69,240,218,.3)}
+.skc.on::after{content:'✓';position:absolute;top:3px;left:5px;font:900 11px var(--font-body);color:var(--teal1)}
+.rkav{width:26px;height:30px;object-fit:contain;margin-right:6px;vertical-align:middle}
+.rkrow .rknm{display:flex;align-items:center}
 </style>
 
 <div id="game">
@@ -587,7 +606,7 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
     <div id="toasts" aria-live="polite"></div>
   </div>
 
-  <div id="hubTop" hidden><div class="hres"><b class="gold">다크 드웰러</b><span id="hubRes"></span></div><div class="hbtns"><button class="ghost" id="rankBtn" type="button">순위</button><button class="ghost" id="helpBtn" type="button">설명</button><button class="ghost" id="cfgBtn" type="button">설정</button><span hidden><button id="invBtn" type="button"></button><button id="talBtn" type="button"></button><button id="cxBtn" type="button"></button></span></div></div>
+  <div id="hubTop" hidden><div class="hres"><b class="gold">다크 드웰러</b><span id="hubRes"></span></div><div class="hbtns"><button class="ghost" id="skinBtn" type="button">스킨</button><button class="ghost" id="rankBtn" type="button">순위</button><button class="ghost" id="helpBtn" type="button">설명</button><button class="ghost" id="cfgBtn" type="button">설정</button><span hidden><button id="invBtn" type="button"></button><button id="talBtn" type="button"></button><button id="cxBtn" type="button"></button></span></div></div>
   <button id="hubAct" class="go" type="button" hidden></button>
   <div id="hubHint" hidden>동굴 안을 걸어 보세요. 대장간 · 창고 · 제단 · 비석에 다가가면 열리고, 아래 출구로 나가면 출발합니다.</div>
   <div id="fade" hidden><b id="fadeTxt"></b></div>
@@ -606,6 +625,9 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
       <div class="lab" id="modeLab">어떻게 할까요</div>
       <div class="modes" id="modes"></div>
       <div class="modes" id="tierRow" hidden></div>
+      <div class="lab">함께할 동료</div>
+      <div class="seg" id="mateSeg"></div>
+      <p class="sub" id="mateSub" style="margin:0;font-size:12.5px"></p>
       <p class="sub" id="best"></p>
       <div class="btns"><button class="ghost" id="campBtn" type="button">야영지로</button><button class="go" id="goBtn" type="button">출발</button></div>
     </div>
@@ -696,6 +718,18 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
     </div>
   </div>
 
+  <div id="skin" class="overlay" hidden>
+    <div class="card skincard">
+      <div class="eyebrow">캐릭터 스킨</div>
+      <div class="skbig"><img id="skinBig" alt=""><div><b id="skinName"></b><span id="skinTier" class="sktier"></span></div></div>
+      <div class="btns"><button class="go" id="skinAct" type="button">끼기</button></div>
+      <div id="skinMsg" class="rkmsg"></div>
+      <div id="skinDust" class="sub"></div>
+      <div id="skinGrid" class="skgrid"></div>
+      <div class="btns"><button class="ghost" id="skinClose" type="button">닫기</button></div>
+    </div>
+  </div>
+
   <div id="rank" class="overlay" hidden>
     <div class="card rankcard">
       <div class="eyebrow">온라인 순위</div>
@@ -752,9 +786,11 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 <script src="js/hub.js"></script>
 <script src="js/cave.js"></script>
 <script src="js/rank.js"></script>
+<script src="js/mates.js"></script>
+<script src="js/skins.js"></script>
 <script src="js/polish.js"></script>
 <script src="js/music.js"></script>
 <script src="js/main.js"></script>
 
-<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160332';</script>
+<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160414';</script>
 </html>

@@ -7,9 +7,9 @@ SFX.wave=()=>{tone('sine',300,920,.3,.22);noise(.3,.18,'bandpass',800,2400,.7);}
 SFX.ui=()=>tone('sine',660,990,.07,.16);
 
 /* 주인공: 그림 한 장을 걸음에 맞춰 들썩·기울임 */
-const heroIm=new Image();heroIm.src='img/hero.png';
+const heroIm=new Image();heroIm.src='img/hero.png';window.heroIm0=heroIm; /* 스킨을 끼면 skins.js 가 src 를 바꾼다 */
 function drawHero(g,o){
-  if(!heroIm.complete||!heroIm.naturalWidth)return;
+  const heroIm=o.im||window.heroIm0;if(!heroIm.complete||!heroIm.naturalWidth)return; /* o.im: 다른 그림(동료는 기본 방랑자) */
   const wp=o.t*10,st=o.move?Math.sin(wp):0,bob=o.move?Math.abs(st)*3.6:Math.sin(o.t*2.2)*1.2,sq=o.move?1+Math.abs(Math.cos(wp))*.045:1+Math.sin(o.t*2.2)*.014;
   let rot=o.move?.06+st*.05:0;if(o.swing>=0){const e=1-Math.pow(1-o.swing,3);rot+=-.3+e*.52;}
   const h=60,w=h*heroIm.naturalWidth/heroIm.naturalHeight;
@@ -95,7 +95,7 @@ function render(dt){
     for(const b of blades){const rev=b.rad<R0-1;ctx.beginPath();ctx.ellipse(P.x,P.y-20,b.rad,b.rad*.8,0,rev?b.a:b.a-.75,rev?b.a+.75:b.a);ctx.stroke();}}
   // 세로 순서대로
   for(const e of enemies){if(e.x<L-110||e.x>R+110||e.y<T-60||e.y>B+220)continue;dl.push(e);if(e.T.light&&lights.length<16)lights.push([e.x,e.y-34,e.T.light,.62]);if(e.elite)lights.push([e.x,e.y-70*e.sc,95*e.sc,.5]);}
-  for(const d of drops)dl.push(d);for(const a of allies)dl.push(a);for(const c of chests)if(c.x>L-60&&c.x<R+60&&c.y>T-60&&c.y<B+80)dl.push(c);for(const g of gims)if(g.x>L-420&&g.x<R+420&&g.y>T-300&&g.y<B+300)dl.push(g);
+  for(const d of drops)dl.push(d);for(const a of allies)dl.push(a);if(state==='play')for(const m of mates)dl.push(m);for(const c of chests)if(c.x>L-60&&c.x<R+60&&c.y>T-60&&c.y<B+80)dl.push(c);for(const g of gims)if(g.x>L-420&&g.x<R+420&&g.y>T-300&&g.y<B+300)dl.push(g);
   dl.push({kind:'hero',y:P.y},{kind:'fire',y:0});if(state==='lobby')hubDrawList(dl);
   dl.sort((a,b)=>a.y-b.y);
   for(const o of dl){switch(o.kind){
@@ -103,6 +103,7 @@ function render(dt){
     case'prop':ctx.fillStyle='rgba(8,8,20,.36)';ell(ctx,o.x,o.y+2,o.sp.w*.3,o.sp.w*.1);ctx.fill();blit(o.sp,o.x,o.y,o.flip,1);if(o.pk==='crystal'||o.pk==='glow'||o.pk==='stump')lights.push([o.x,o.y-26,125+Math.sin(clock*2+o.x)*8,.7]);break;
     case'drop':drawDrop(o);break;
     case'ally':drawAlly(o);break;
+    case'mate':drawMate(o);break;
     case'chest':drawChest(o);break;
     case'gim':drawGim(o);break;
     case'hub':drawHub(o);break;

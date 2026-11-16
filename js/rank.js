@@ -20,7 +20,7 @@ function rankGear(){const best={};
 async function rankPost(path,body){if(!RANK_URL)throw new Error('off');const r=await fetch(RANK_URL+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({ok:false,error:'응답 오류'}));if(!r.ok||!j.ok)throw new Error(j.error||'실패');return j;}
 /* 기록 보내기: rift = {tier,t} (굴레 성공 때만) */
 async function rankSubmit(rift){if(!rankMe||!RANK_URL)return;const now=Date.now();if(!rift&&now-rankSentAt<25000)return;rankSentAt=now;
-  const g=rankGear();const body={id:rankMe.id,key:rankMe.key,gear:g.gear,total:g.total};
+  const g=rankGear();const body={id:rankMe.id,key:rankMe.key,gear:g.gear,total:g.total,skin:typeof skinCur==='function'?skinCur():'base'};
   const R=SAVE.rift;if(!rift&&R&&R.best)rift={tier:R.best,t:clamp(R.bestT||600,60,600)}; /* 이 기기의 굴레 최고 기록도 함께 */
   if(rift)body.rift=rift;
   try{await rankPost('/submit',body);}catch(_){}}
@@ -54,7 +54,7 @@ async function rankLoad(){
   const board=rankBoard==='slot'?'slot:'+rankSlot:rankBoard;
   try{const r=await fetch(`${RANK_URL}/top?board=${encodeURIComponent(board)}&n=50${rankMe?'&me='+rankMe.id:''}`);const j=await r.json();if(!j.ok)throw 0;
     box.innerHTML='';if(!j.rows.length){box.append(el('div','rkempty','아직 기록이 없습니다. 첫 번째가 되어 보세요!'));}
-    j.rows.forEach((w,i)=>{const row=el('div','rkrow'+(w.me?' me':'')+(i<3?' top'+(i+1):''));row.append(el('b','rkn',String(i+1)),el('span','rknm',w.name));
+    j.rows.forEach((w,i)=>{const row=el('div','rkrow'+(w.me?' me':'')+(i<3?' top'+(i+1):''));const nm=el('span','rknm');const sk=(typeof SKIN!=='undefined'&&SKIN[w.skin])||null;if(sk){const av=el('img','rkav');av.src=sk.img;av.alt='';nm.append(av);}nm.append(document.createTextNode(w.name));row.append(el('b','rkn',String(i+1)),nm);
       let v='';if(rankBoard==='rift')v=`${w.tier}단계 · ${mmss(w.t)}`;else if(rankBoard==='total')v=`${w.score}점`;else{const sp=el('span','rkv');const gg=el('em','rkg',GRADE_K[w.grade]);gg.style.color=GRADES[w.grade].c;sp.append(gg,document.createTextNode(` ${w.q}%`));row.append(sp);row.title=w.item;box.append(row);return;}
       row.append(el('span','rkv',v));box.append(row);});
     if(j.myRank)mine.textContent=`내 순위 ${j.myRank}위`;else if(rankMe)mine.textContent=rankBoard==='rift'?'굴레를 깨면 순위에 오릅니다.':'판을 마치면 기록이 올라갑니다.';}
