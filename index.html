@@ -601,6 +601,14 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 .rlock{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}.rlock b{width:100%;font:700 11.5px var(--font-body);color:#a9b6e2;text-align:center}
 .rlock .ghost.on{color:#2b1a00;background:var(--goldbtn);border-color:transparent}
 .rl.lk{color:#ffd862}.rl.glow{color:#fff3b0;text-shadow:0 0 10px rgba(255,210,80,.8)}
+/* 11-16 함께하기 매칭 */
+.matchcard{max-width:420px}
+.mcount{display:flex;align-items:baseline;justify-content:center;gap:4px}.mcount b{font:900 44px var(--font-display);color:#fff;text-shadow:0 0 18px rgba(69,240,218,.5)}.mcount small{color:#9ea6c9;font-weight:700}
+.mslots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.mslot{display:grid;justify-items:center;gap:2px;padding:8px 2px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--edge);min-height:118px}
+.mslot img{height:62px;object-fit:contain}.mslot b{font:800 12.5px var(--font-body);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.mslot small{font-size:10.5px;color:#9ea6c9}
+.mslot.me{border-color:rgba(69,240,218,.6)}.mslot.wait img{visibility:hidden}.mslot.wait b{color:#7f88b6;animation:tapPulse 1.2s ease-in-out infinite}
+.mslot.join{border-color:rgba(169,141,255,.55);animation:bestPop .45s cubic-bezier(.2,1.6,.4,1) both}.mslot.join small{color:#cdbfff}
 </style>
 
 <div id="game">
@@ -644,7 +652,7 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
       <div class="lab" id="modeLab">어떻게 할까요</div>
       <div class="modes" id="modes"></div>
       <div class="modes" id="tierRow" hidden></div>
-      <div class="lab">함께할 동료</div>
+      <div class="lab" id="mateLab">영겁의 굴레 · 함께하기</div>
       <div class="seg" id="mateSeg"></div>
       <p class="sub" id="mateSub" style="margin:0;font-size:12.5px"></p>
       <p class="sub" id="best"></p>
@@ -737,6 +745,16 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
     </div>
   </div>
 
+  <div id="match" class="overlay" hidden>
+    <div class="card matchcard">
+      <div class="eyebrow">영겁의 굴레 · 함께하기</div>
+      <h2 class="gold">함께할 사람을 찾는 중</h2>
+      <div class="mcount"><b id="matchCount">10</b><small>초</small></div>
+      <div id="matchSlots" class="mslots"></div>
+      <div class="btns"><button class="ghost" id="matchCancel" type="button">취소</button><button class="go" id="matchNow" type="button">바로 시작</button></div>
+    </div>
+  </div>
+
   <div id="skin" class="overlay" hidden>
     <div class="card skincard">
       <div class="eyebrow">캐릭터 스킨</div>
@@ -811,5 +829,5 @@ h1,h2,#timer,#banner,#cine b,#title .tlogo b,.revc,#adCount,#fade b,.lvb,.rstat 
 <script src="js/music.js"></script>
 <script src="js/main.js"></script>
 
-<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160741';</script>
+<script>/* 오프라인 저장(웹에 올린 판에서만) */if('serviceWorker' in navigator&&location.protocol==='https:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});window.DD_BUILD='202611160822';</script>
 </html>

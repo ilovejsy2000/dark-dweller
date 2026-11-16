@@ -224,7 +224,7 @@ function uiInit(){
   for(const[k,label,vals]of OPTS){const row=el('div','row');row.append(el('span',null,label));const seg=el('div','seg');
     vals.forEach((v,i)=>{const b=btn(v,()=>{CFG[k]=i;applyCfg();soundOn();SFX.ui();if(k==='vib'&&i)buzz(30);},'');b.id=`cfg-${k}-${i}`;b.dataset.k=k;b.dataset.v=i;seg.append(b);});
     row.append(seg);$('cfgRows').append(row);}
-  $('goBtn').addEventListener('click',()=>{if(state==='lobby')hubDepart();else uiStart();}); // 거점에서는 동굴 밖으로 걸어 나간 뒤 시작
+  $('goBtn').addEventListener('click',()=>{if(state==='lobby'){if(matchWanted())openMatch(hubDepart);else hubDepart();}else uiStart();}); /* 11-16: 영겁의 굴레 함께하기는 10초 매칭 뒤 출발 */ // 거점에서는 동굴 밖으로 걸어 나간 뒤 시작
   $('adBtn').addEventListener('click',()=>{if(performance.now()-choiceAt<350||!curChoices.length||(RUN.adsUsed||0)>=AD_ALL_MAX)return;SFX.ui();showRewardAd(grantAll);});
   $('rerollBtn').addEventListener('click',()=>{if(RUN.rerolls<=0||performance.now()-choiceAt<350)return;RUN.rerolls--;SFX.ui();renderChoice();});
   $('invBtn').addEventListener('click',()=>{soundOn();SFX.ui();uiInv('lobby');});

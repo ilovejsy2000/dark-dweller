@@ -14,7 +14,7 @@ const HUB=[
 const CAVE={rx:300,ry:255,cy:0,exitW:70};          // 동굴 바닥(타원)과 출구 폭
 const CAVE_DARK=[10,8,22,.3];                        // 동굴 안 어둠
 let hubNear=null,hubHinted=false,hubExit=null,hubEnter=0;
-const hubPanels=['lobby','inv','tal','cx','cfg','help','tip','result','rank','skin'];
+const hubPanels=['lobby','inv','tal','cx','cfg','help','tip','result','rank','skin','match'];
 const hubFree=()=>state==='lobby'&&!hubExit&&hubPanels.every(id=>$(id).hidden);
 function hubOpen(k){SFX.ui();soundOn();joy=null;show('hubHint',false); /* 안내문이 열린 창 위에 겹치지 않게 */
   if(k==='exit'){refreshLobby();show('lobby',true);}
