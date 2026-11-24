@@ -19,7 +19,7 @@ function wakeGuard(e){
   if(!bossRef||bossRef.dead)bossRef=e;thinOut();cine={t:1.8,max:1.8,e};uiCine(e.name,false);$('cineSub').textContent='수호자 · 매우 강함';cxSee('m',e.type);setTimeout(()=>{if(state==='play')uiNote('수호자는 아주 강합니다 · 잡으면 신화 장비');},1900);SFX.elite();shake(.5);buzz(60);
 }
 /* 수호 보스 보상: 신화 확정. 먼 곳의 수호 보스일수록 더 준다 */
-function guardLoot(e){const t=e.tier||0;dropItem(e.x,e.y,4,0);if(t>=2)dropItem(e.x,e.y,3,.12);if(t>=4)dropItem(e.x,e.y,4,.24);uiBanner('수호 보스 처치');}
+function guardLoot(e){const t=e.tier||0;dropItem(e.x,e.y,4,0);if(t>=2)dropItem(e.x,e.y,4,.12);/* 11-24: 덤 전설 → 신화 */if(t>=4)dropItem(e.x,e.y,4,.24);uiBanner('수호 보스 처치');}
 function updateWorld(dt){
   // 상자: 다가가면 열린다. 1분마다 하나씩 다시 생긴다(최대 5개)
   nextChest-=dt;if(nextChest<=0){nextChest=60;if(chests.length<CHEST_N)addChest();}

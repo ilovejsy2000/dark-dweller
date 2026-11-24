@@ -28,7 +28,7 @@ function riftWin(){const r=rift,rem=RIFT_T-runT;r.done=true;r.gain=rem>=RIFT_T*.
   const R=SAVE.rift||(SAVE.rift={open:1,best:0,bestT:0});R.open=Math.max(R.open||1,r.tier+r.gain);
   if(r.tier>R.best||(r.tier===R.best&&runT<(R.bestT||1e9))){R.best=r.tier;R.bestT=Math.floor(runT);}
   riftTier=Math.min(R.open,r.tier+r.gain);
-  const n=Math.min(6,1+(r.tier/3|0)),mp=Math.min(.95,.1+.06*(r.tier-1));let my=0;for(let i=0;i<n;i++){let g=Math.random()<mp?4:3;if(i===n-1&&r.tier>=10&&!my)g=4;if(g===4)my++;addLoot(makeItem(g,curFloor()));}} /* 11-16 대표님 "단계가 높을수록 신화가 잘 나오게": 성공 보상 전설 이상 n개, 신화 확률 10%+단계당 6%, 10단계부터 신화 1개 확정 */
+  const n=Math.min(6,1+(r.tier/3|0)),mp=Math.min(.95,.1+.06*(r.tier-1));let my=0;for(let i=0;i<n;i++){let g=4;if(g===4)my++;addLoot(makeItem(g,curFloor()));}} /* 11-24 대표님 "보상은 신화 이상": 성공 보상 전부 신화(초월 확률은 그대로) */ /* 11-16 대표님 "단계가 높을수록 신화가 잘 나오게": 성공 보상 전설 이상 n개, 신화 확률 10%+단계당 6%, 10단계부터 신화 1개 확정 */
 function riftGoal(){if(!rift)return'';if(rift.guard)return'수호자를 잡으세요';return`굴레 ${Math.floor(rift.prog/rift.need*100)}%`;}
 function riftTitle(win){return win?`${rift.tier}단계 성공`:rift.done&&runT>=RIFT_T?'시간 초과':'쓰러졌습니다';}
 function riftSum(win){const r=rift;return win?`남은 시간 ${mmss(Math.max(0,RIFT_T-runT))} · 다음 단계 +${r.gain} · 레벨 ${P.level} · 처치 ${kills}`:`${r.tier}단계 · 굴레 ${Math.floor(r.prog/r.need*100)}% · 레벨 ${P.level} · 처치 ${kills}`;}

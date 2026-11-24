@@ -151,7 +151,7 @@ function killEnemy(e){
   onKill2(e);relicOnKill(e);if(e.guard)guardLoot(e);if(rift)riftKill(e);metaKill(e);
   if(T.split&&enemies.length<400)for(let i=0;i<3;i++){const a=i*TAU/3;spawn(T.split,{at:[e.x+Math.cos(a)*22,e.y+Math.sin(a)*16]});} // 분홍 젤리: 꼬마 젤리 셋으로 갈라짐
   if(big){buzz(e.boss?80:40);shake(e.boss?.9:.5);freeze=Math.max(freeze,e.boss?.25:.1);flash(e.x,e.y-40,420,.4);SFX.boom();
-    const cnt=e.guard?0:e.boss?1:(RUN.newbie||Math.random()<.6?1:0); /* 11-15 대표님 "아이템 나오는 양을 줄여": 보스 2→1, 정예 1→60% */for(let i=0;i<cnt;i++)dropItem(e.x,e.y,rollGrade(e.boss?2:1,lootBoost()+(e.boss?1.5:.5)),i*.09);
+    const cnt=e.guard?0:e.boss?1:(RUN.newbie||Math.random()<.6?1:0); /* 11-15 대표님 "아이템 나오는 양을 줄여": 보스 2→1, 정예 1→60% */for(let i=0;i<cnt;i++)dropItem(e.x,e.y,e.boss?4:rollGrade(1,lootBoost()+.5),i*.09); /* 11-24 대표님: 보스 보상은 신화 확정 */
     if(e.boss===2)winRun();
   }else{SFX.kill();if(can('kp',70))shake(.035);if(Math.random()<(e.champ?.03:T.loot||.004)*(1+ST.luck/100)*(burnT>0?2:1)*(1+.3*(FX.golden||0)))dropItem(e.x,e.y,Math.min(2,rollGrade(e.champ?1:0,lootBoost())),0);} /* 11-16 성장 속도: 잡몹 드롭 .007→.004(강화 적 .06→.03), 잡몹은 유니크까지만 */
 }
@@ -168,7 +168,7 @@ function hurt(d,magic){
 }
 function winRun(){
   ending={win:true,t:2.6};const mi=mapIdx();
-  if(rift)riftWin();else for(let i=0;i<2+mi;i++)addLoot(makeItem(rollGrade(2,lootBoost()+1+mi),curFloor()));
+  if(rift)riftWin();else for(let i=0;i<2+mi;i++)addLoot(makeItem(i===0?4:rollGrade(2,lootBoost()+1+mi),curFloor())); /* 11-24: 클리어 보상 하나는 신화 확정 */
   for(const e of enemies)if(!e.dead){e.dead=true;puff(e.x,e.y-e.r*.6,2);}
   eshots=[];warns=[];flash(P.x,P.y-20,600,.8);SFX.level();
 }
@@ -411,7 +411,8 @@ function update(dt){
     if(runT>=nextHorde&&calm)nextHorde=runT+20; // 보스가 막 나왔으면 몰려오기를 미룬다
     if(runT>=nextHorde){nextHorde+=HORDE_EVERY;hordeT=HORDE_LEN;uiBanner('적이 몰려옵니다');SFX.horn();
       const n=Math.min(64,24+m*4|0),rad=viewRad()+40;for(let i=0;i<n;i++){const a=i/n*TAU;spawn(hordeKind(m,i),{at:[P.x+Math.cos(a)*rad,P.y+Math.sin(a)*rad*.85]});}}
-    if(runT>=nextBurn){nextBurn+=BURN_EVERY;if(!bossRef){burnT=BURN_LEN;uiBanner('버닝 타임');SFX.level();}}
+    if(runT>=nextBurn&&bossOn)nextBurn=runT+15; // 11-24: 보스 중이면 버닝을 날리지 않고 미룬다
+    if(runT>=nextBurn){nextBurn=Math.max(nextBurn+BURN_EVERY,runT+60);burnT=BURN_LEN;uiBanner('버닝 타임');SFX.level();}
     if(runT>=nextBoss&&!(mode.t>0&&runT>=mode.t)&&enemies.some(e=>e.boss===1&&!e.dead))nextBoss=runT+30; // 앞 보스가 살아 있으면 다음 보스는 미룬다(쌓이지 않게)
     if(runT>=nextBoss){const fin=mode.t>0&&runT>=mode.t;nextBoss=fin?Infinity:nextBoss+BOSS_EVERY;const a=Math.random()*TAU,rad=viewRad()*.8;
       const bk=bossKind(bossN++,fin);bossRef=spawn(bk,{hpMul:fin?2:1,dmgMul:fin?1.3:1,boss:fin?2:1,name:fin?'대군주 '+ET[bk].n:ET[bk].n,at:[P.x+Math.cos(a)*rad,P.y+Math.sin(a)*rad*.8]});

@@ -9,7 +9,7 @@
 let RUN=runInit();
 function runInit(){return{ehp:1,edmg:1,spawn:1,xp:1,pdmg:1,php:1,taken:1,espd:1,eliteEvery:1,gobEvery:1,altarEvery:1,choice:0,
   rerolls:tal('reroll'),revive:tal('revive'),shardBonus:0,shardGain:0,dustBonus:0,dustGain:0,eliteLoot:0,daily:false,pacts:[],lastHurt:0,
-  gobT:rand(80,130),altarT:150,altar:null,quest:null,questT:50,newCx:0};}
+  gobT:rand(50,80),altarT:90,altar:null,quest:null,questT:50,newCx:0};}
 
 /* ───── ① 특성 ───── */
 const TALENTS=[ /* max:Infinity = 상한 없음(11-16 대표님) */
@@ -63,16 +63,16 @@ function fleeAI(e,dx,dy,d,dt){
   if(e.hitT>0&&Math.random()<dt*6)gems.push({x:e.x+rand(-10,10),y:e.y+rand(-8,8),v:Math.ceil(DIFF.xp(runT/60)),t:0,pull:0}); // 맞을 때마다 보석을 흘린다
   return e.T.spd*(d<160?1.25:1);
 }
-function goblinLoot(e){for(let i=0;i<3;i++)dropItem(e.x,e.y,rollGrade(1,lootBoost()+2),i*.1);
+function goblinLoot(e){for(let i=0;i<3;i++)dropItem(e.x,e.y,i===0?4:rollGrade(1,lootBoost()+2),i*.1); /* 11-24: 하나는 신화 확정 */
   for(let i=0;i<30;i++)gems.push({x:e.x+rand(-40,40),y:e.y+rand(-28,28),v:Math.ceil(3*DIFF.xp(runT/60)),t:0,pull:0});
   if(hardRun()){RUN.shardBonus+=10;uiBanner('보물 고블린 처치 · 어둠 결정 +10');}else{RUN.dustBonus+=20;uiBanner('보물 고블린 처치 · 마력 가루 +20');}SFX.loot(4);flash(e.x,e.y-20,380,.4);ring(e.x,e.y,16,520,'#ffd56a');ember(e.x,e.y-20,24,30,140,'#ffd56a');}
 
 /* ───── ② 갈림길 제단: 저주 하나를 받고 보상 하나를 얻는다 ───── */
 const PACTS=[
-  {n:'피의 계약',cost:'적 체력 +25%',gain:'전설 장비 하나를 바로 얻습니다',go(){RUN.ehp*=1.25;dropItem(P.x,P.y,3,0);}},
+  {n:'피의 계약',cost:'적 체력 +25%',gain:'신화 장비 하나를 바로 얻습니다',go(){RUN.ehp*=1.25;dropItem(P.x,P.y,4,0);}},
   {n:'무리의 계약',cost:'적이 30% 더 많이 나옵니다',gain:'경험치 +40%',go(){RUN.spawn*=1.3;RUN.xp*=1.4;}},
   {n:'유리 칼날',cost:'최대 체력 -20%',gain:'피해 +30%',go(){RUN.php*=.8;RUN.pdmg*=1.3;recalc();}},
-  {n:'고통의 계약',cost:'받는 피해 +25%',gain:'다음 정예 셋이 장비를 하나씩 더 떨어뜨립니다',go(){RUN.taken*=1.25;RUN.eliteLoot+=3;}},
+  {n:'고통의 계약',cost:'받는 피해 +25%',gain:'다음 정예 하나가 신화 장비를 떨어뜨립니다',go(){RUN.taken*=1.25;RUN.eliteLoot+=1;}},
   {n:'탐욕의 계약',cost:'적 공격 +20%',gain:'보물 고블린이 바로 나타나고, 곁에 상자 둘이 생깁니다',go(){RUN.edmg*=1.2;spawnGoblin();chestNear();chestNear();}},
   {n:'시간의 계약',cost:'적 이동 속도 +15%',gain:'배운 스킬 둘이 한 단계씩 오릅니다',go(){RUN.espd*=1.15;const ids=Object.keys(P.act).filter(k=>P.act[k]<SKILL_MAX).sort(()=>Math.random()-.5).slice(0,2);for(const k of ids){P.act[k]++;calcPerks(k);}}},
 ];
@@ -98,11 +98,11 @@ function questFail(){RUN.quest=null;RUN.questT=35;uiNote('임무 실패');}
 /* ───── 판 안에서 매 틀 ───── */
 function metaUpdate(dt){
   if(ending||P.dead)return;
-  /* 고블린: 1분 반쯤부터, 2분 반~4분마다 */
-  RUN.gobT-=dt;if(RUN.gobT<=0){RUN.gobT=rand(150,240)*RUN.gobEvery;if(!enemies.some(e=>e.type==='tgob'&&!e.dead))spawnGoblin();}
-  /* 제단: 2분 반부터 3분마다, 60초 동안 서 있다. 1초 올라서면 계약 고르기 */
+  /* 고블린: 1분쯤부터, 1분 반~2분 20초마다 */
+  RUN.gobT-=dt;if(RUN.gobT<=0){RUN.gobT=rand(90,140)*RUN.gobEvery; /* 11-24: 2분 반~4분 → 1분 반~2분 20초 */if(!enemies.some(e=>e.type==='tgob'&&!e.dead))spawnGoblin();}
+  /* 제단: 1분 반부터 2분마다, 60초 동안 서 있다. 1초 올라서면 계약 고르기 */
   RUN.altarT-=dt;
-  if(RUN.altarT<=0&&!RUN.altar){RUN.altarT=180*RUN.altarEvery;const a=Math.random()*TAU,d=rand(260,360);RUN.altar={x:P.x+Math.cos(a)*d,y:P.y+Math.sin(a)*d*.8,life:60,on:0};keepIn(RUN.altar,60);uiBanner('갈림길 제단이 나타났습니다');}
+  if(RUN.altarT<=0&&!RUN.altar){RUN.altarT=120*RUN.altarEvery; /* 11-24: 3분 → 2분 */const a=Math.random()*TAU,d=rand(260,360);RUN.altar={x:P.x+Math.cos(a)*d,y:P.y+Math.sin(a)*d*.8,life:60,on:0};keepIn(RUN.altar,60);uiBanner('갈림길 제단이 나타났습니다');}
   const al=RUN.altar;if(al){al.life-=dt;if(al.life<=0)RUN.altar=null;else if(Math.hypot(P.x-al.x,(P.y-al.y)*1.3)<62){al.on+=dt;if(al.on>=1){RUN.altar=null;openPact();}}else al.on=Math.max(0,al.on-dt*2);}
   /* 임무 */
   if(!RUN.quest){RUN.questT-=dt;if(RUN.questT<=0&&!(bossRef&&!bossRef.dead))newQuest();}
@@ -115,7 +115,7 @@ function metaUpdate(dt){
 function metaKill(e){
   pickOnKill(e);
   if(e.type==='tgob')goblinLoot(e);
-  if(e.elite&&!e.boss&&RUN.eliteLoot>0){RUN.eliteLoot--;dropItem(e.x,e.y,rollGrade(2,lootBoost()+1),.2);}
+  if(e.elite&&!e.boss&&RUN.eliteLoot>0){RUN.eliteLoot--;dropItem(e.x,e.y,4,.2);}
   const q=RUN.quest;if(q){if(q.Q.k==='kill')q.n++;else if(q.Q.k==='elite'&&e.elite&&!e.boss)q.n++;}
 }
 function metaChest(){const q=RUN.quest;if(q&&q.Q.k==='chest')q.n++;}

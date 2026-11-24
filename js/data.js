@@ -135,9 +135,9 @@ function passiveText(id){const p=PASSIVES[id];return fmtLine(p.stat,p.v)+(p.stat
 /* 11-15 대표님 "판이 길어 지루": 맵마다 정해진 시간을 버티고 끝 보스를 잡으면 클리어(t:-1 = 그 맵의 clear), 무한은 그대로 */
 const MODES=[{k:'클리어',t:-1},{k:'무한',t:0}];
 /* 액티브는 가짓수 제한 없이 전부 배울 수 있다(11-14 대표님). 패시브는 6종까지. */
-const BOSS_EVERY=300,ELITE_FROM=45,ELITE_EVERY=25,MAX_ACT=99,MAX_PAS=6;
+const BOSS_EVERY=150,/* 11-24: 300→150 */ELITE_FROM=45,ELITE_EVERY=25,MAX_ACT=99,MAX_PAS=6;
 /* 사건: 몰려오기(90초부터 3분마다 12초), 버닝 타임(3분부터 3분마다 20초: 경험치 2배·드롭 2.5배·적 더 많이) */
-const MINI_HORDE=40,HORDE_FROM=90,HORDE_EVERY=180,HORDE_LEN=12,BURN_FROM=240,BURN_EVERY=180,BURN_LEN=20;
+const MINI_HORDE=40,HORDE_FROM=60,HORDE_EVERY=120,HORDE_LEN=12,BURN_FROM=100,BURN_EVERY=120,BURN_LEN=20; /* 11-24: 몰려오기 90/180→60/120, 버닝 240/180→100/120(보스 150초와 겹치지 않게) */
 
 /* 난이도: m = 버틴 분 */
 const DIFF={
